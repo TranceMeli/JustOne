@@ -1,0 +1,28 @@
+# .NET build output
+**/bin/
+**/obj/
+*.csproj.user
+*.suo
+.vs/
+
+# Local database and SQLite journal files
+/asp-backend/justone.db
+/asp-backend/justone.db-shm
+/asp-backend/justone.db-wal
+
+# User-uploaded content
+/asp-backend/wwwroot/uploads/
+
+# JavaScript dependencies and build output
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+# Local environment overrides
+**/.env
+**/.env.*
+!**/.env.example
+
+# Operating system files
+.DS_Store
+Thumbs.db

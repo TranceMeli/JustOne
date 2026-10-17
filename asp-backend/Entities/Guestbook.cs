@@ -1,0 +1,12 @@
+﻿namespace JustOne.Entities;
+
+public class GuestbookEntry
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = default!;
+
+    public string Message { get; set; } = default!;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
