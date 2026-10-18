@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { BACKEND_ORIGIN } from '../config'
 
+let refreshPromise = null
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     accessToken: localStorage.getItem('accessToken') || null,
@@ -56,15 +58,21 @@ export const useAuthStore = defineStore('auth', {
     // Gets a new access token using the stored refresh token.
     // Also uses axios directly here: otherwise a failed refresh would trigger an
     // infinite loop in apiClient's 401 interceptor.
-    async refresh() {
+    // Concurrent callers share one in-flight request: sending the same refresh token twice
+    // would make the backend treat the second call as token theft and revoke every session.
+    refresh() {
       if (!this.refreshToken) {
-        throw new Error('No refresh token available.')
+        return Promise.reject(new Error('No refresh token available.'))
       }
 
-      const response = await axios.post(`${BACKEND_ORIGIN}/api/auth/refresh`, {
-        refreshToken: this.refreshToken
-      })
-      this.setSession(response.data)
+      refreshPromise ??= axios
+        .post(`${BACKEND_ORIGIN}/api/auth/refresh`, { refreshToken: this.refreshToken })
+        .then((response) => this.setSession(response.data))
+        .finally(() => {
+          refreshPromise = null
+        })
+
+      return refreshPromise
     },
 
     async logout() {

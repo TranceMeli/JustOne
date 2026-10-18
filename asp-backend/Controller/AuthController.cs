@@ -165,7 +165,11 @@ public class AuthController(
             return BadRequest($"Role '{request.Role}' does not exist.");
         }
 
-        await userManager.AddToRoleAsync(user, request.Role);
+        var result = await userManager.AddToRoleAsync(user, request.Role);
+        if (!result.Succeeded)
+        {
+            return BadRequest(result.Errors.Select(e => e.Description));
+        }
 
         return Ok($"Role '{request.Role}' added to '{request.Email}'. Log in again to refresh the token.");
     }

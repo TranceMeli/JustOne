@@ -14,19 +14,41 @@ namespace JustOne.Controllers;
 [Authorize]
 public class PostsController(AppDbContext db, IWebHostEnvironment env) : ControllerBase
 {
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+
+    // Only real image formats - anything else (e.g. .html, .svg) could run script code
+    // when served from our own origin via UseStaticFiles.
+    private static readonly HashSet<string> AllowedExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+
     private string UserId => User.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+
+    private string UploadsFolder => Path.Combine(env.ContentRootPath, "wwwroot", "uploads");
 
     // GET /api/posts/calendar?year=2026&month=3
     [HttpGet("calendar")]
     public async Task<IActionResult> GetCalendar(int year, int month)
     {
-        var daysInMonth = DateTime.DaysInMonth(year, month);
+        if (year is < 1 or > 9999 || month is < 1 or > 12)
+        {
+            return BadRequest("Invalid year or month.");
+        }
 
-        var postsByDay = await db.Posts
-            .Where(p => p.UserId == UserId && p.CreatedAt.Year == year && p.CreatedAt.Month == month)
-            .ToDictionaryAsync(p => p.CreatedAt.Day);
+        var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var monthEnd = monthStart.AddMonths(1);
 
-        var days = Enumerable.Range(1, daysInMonth)
+        // Range query instead of .Year/.Month so the (UserId, CreatedAt) index can be used.
+        var posts = await db.Posts
+            .Where(p => p.UserId == UserId && p.CreatedAt >= monthStart && p.CreatedAt < monthEnd)
+            .Select(p => new { p.Id, p.ImagePath, p.CreatedAt })
+            .ToListAsync();
+
+        // GroupBy instead of ToDictionary: a duplicate day must not crash the whole calendar.
+        var postsByDay = posts
+            .GroupBy(p => p.CreatedAt.Day)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var days = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
             .Select(day => postsByDay.TryGetValue(day, out var post)
                 ? new CalendarDayResponse(day, true, post.ImagePath, post.Id)
                 : new CalendarDayResponse(day, false, null, null))
@@ -39,36 +61,25 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
     [HttpPost]
     public async Task<IActionResult> Create(IFormFile file)
     {
-        if (file.Length == 0)
+        if (ValidateFile(file) is { } error)
         {
-            return BadRequest("No file submitted.");
+            return BadRequest(error);
         }
 
         var today = DateTime.UtcNow.Date;
 
         var alreadyPostedToday = await db.Posts
-            .AnyAsync(p => p.UserId == UserId && p.CreatedAt.Date == today);
+            .AnyAsync(p => p.UserId == UserId && p.CreatedAt == today);
 
         if (alreadyPostedToday)
         {
             return Conflict("You have already posted today.");
         }
 
-        var uploadsFolder = Path.Combine(env.ContentRootPath, "wwwroot", "uploads");
-        Directory.CreateDirectory(uploadsFolder);
-
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
-        await using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
         var post = new Post
         {
             UserId = UserId,
-            ImagePath = $"/uploads/{fileName}",
+            ImagePath = await SaveImageAsync(file),
             CreatedAt = today
         };
 
@@ -82,36 +93,22 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
     [HttpPut]
     public async Task<IActionResult> Update(IFormFile file)
     {
-        if (file.Length == 0)
+        if (ValidateFile(file) is { } error)
         {
-            return BadRequest("No file submitted.");
+            return BadRequest(error);
         }
 
         var today = DateTime.UtcNow.Date;
 
         var post = await db.Posts
-            .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt.Date == today);
+            .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt == today);
 
         if (post is null)
         {
             return NotFound("No post found for today.");
         }
 
-        DeleteImageFile(post.ImagePath);
-
-        var uploadsFolder = Path.Combine(env.ContentRootPath, "wwwroot", "uploads");
-        Directory.CreateDirectory(uploadsFolder);
-
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
-        await using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        post.ImagePath = $"/uploads/{fileName}";
-        await db.SaveChangesAsync();
+        await ReplaceImageAsync(post, file);
 
         return Ok(new PostResponse(post.Id, post.CreatedAt, post.ImagePath));
     }
@@ -123,17 +120,16 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         var today = DateTime.UtcNow.Date;
 
         var post = await db.Posts
-            .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt.Date == today);
+            .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt == today);
 
         if (post is null)
         {
             return NotFound("No post found for today.");
         }
 
-        DeleteImageFile(post.ImagePath);
-
         db.Posts.Remove(post);
         await db.SaveChangesAsync();
+        DeleteImageFile(post.ImagePath);
 
         return Ok("Post deleted.");
     }
@@ -144,9 +140,9 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
     [Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
     public async Task<IActionResult> ModerateUpdate(int id, IFormFile file)
     {
-        if (file.Length == 0)
+        if (ValidateFile(file) is { } error)
         {
-            return BadRequest("No file submitted.");
+            return BadRequest(error);
         }
 
         var post = await db.Posts.FindAsync(id);
@@ -155,21 +151,7 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return NotFound("Post not found.");
         }
 
-        DeleteImageFile(post.ImagePath);
-
-        var uploadsFolder = Path.Combine(env.ContentRootPath, "wwwroot", "uploads");
-        Directory.CreateDirectory(uploadsFolder);
-
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
-        await using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        post.ImagePath = $"/uploads/{fileName}";
-        await db.SaveChangesAsync();
+        await ReplaceImageAsync(post, file);
 
         return Ok(new PostResponse(post.Id, post.CreatedAt, post.ImagePath));
     }
@@ -186,10 +168,9 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return NotFound("Post not found.");
         }
 
-        DeleteImageFile(post.ImagePath);
-
         db.Posts.Remove(post);
         await db.SaveChangesAsync();
+        DeleteImageFile(post.ImagePath);
 
         return Ok("Post deleted (moderation).");
     }
@@ -197,14 +178,64 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
     [HttpGet("{id:int}/image")]
     public async Task<IActionResult> GetImage(int id)
     {
-        var post = await db.Posts.FindAsync(id);
-        return post is null ? NotFound() : Ok(new { post.ImagePath });
+        var imagePath = await db.Posts
+            .Where(p => p.Id == id)
+            .Select(p => p.ImagePath)
+            .FirstOrDefaultAsync();
+
+        return imagePath is null ? NotFound() : Ok(new { ImagePath = imagePath });
+    }
+
+    private static string? ValidateFile(IFormFile file)
+    {
+        if (file.Length == 0)
+        {
+            return "No file submitted.";
+        }
+
+        if (file.Length > MaxFileSize)
+        {
+            return "File is too large (max. 10 MB).";
+        }
+
+        if (!AllowedExtensions.Contains(Path.GetExtension(file.FileName)))
+        {
+            return "Only JPG, PNG, GIF and WebP images are allowed.";
+        }
+
+        return null;
+    }
+
+    // Saves the new image first and only then removes the old one, so a failed
+    // upload never leaves the post pointing at a deleted file.
+    private async Task ReplaceImageAsync(Post post, IFormFile file)
+    {
+        var oldImagePath = post.ImagePath;
+
+        post.ImagePath = await SaveImageAsync(file);
+        await db.SaveChangesAsync();
+
+        DeleteImageFile(oldImagePath);
+    }
+
+    private async Task<string> SaveImageAsync(IFormFile file)
+    {
+        Directory.CreateDirectory(UploadsFolder);
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName).ToLowerInvariant()}";
+        var filePath = Path.Combine(UploadsFolder, fileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.CreateNew))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return $"/uploads/{fileName}";
     }
 
     private void DeleteImageFile(string imagePath)
     {
-        var fileName = Path.GetFileName(imagePath);
-        var fullPath = Path.Combine(env.ContentRootPath, "wwwroot", "uploads", fileName);
+        var fullPath = Path.Combine(UploadsFolder, Path.GetFileName(imagePath));
 
         if (System.IO.File.Exists(fullPath))
         {

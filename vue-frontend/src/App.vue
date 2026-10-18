@@ -22,7 +22,6 @@ const {
   prevMonth,
   nextMonth,
   monthDays,
-  hasPostedToday,
   todayImageUrl,
   recordPost,
   removePost,

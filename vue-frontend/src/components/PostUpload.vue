@@ -9,6 +9,11 @@ const props = defineProps({
 
 const emit = defineEmits(['posted', 'deleted'])
 
+// Must match the limits in the backend's PostsController.
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ACCEPTED_TYPES = 'image/jpeg,image/png,image/gif,image/webp'
+
+const fileInput = ref(null)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
 const isSubmitting = ref(false)
@@ -29,8 +34,20 @@ function onFileChange(event) {
   errorMessage.value = ''
 
   clearPreview()
+  if (file && file.size > MAX_FILE_SIZE) {
+    errorMessage.value = 'The photo is too large (max. 10 MB).'
+    resetFileInput()
+    return
+  }
   if (file) {
     previewUrl.value = URL.createObjectURL(file)
+  }
+}
+
+function resetFileInput() {
+  selectedFile.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
   }
 }
 
@@ -53,13 +70,15 @@ async function handleSubmit() {
       : await apiClient.post('/posts', formData)
 
     emit('posted', `${BACKEND_ORIGIN}${response.data.imageUrl}`, response.data.id)
-    selectedFile.value = null
+    resetFileInput()
     clearPreview()
   } catch (err) {
     if (err.response?.status === 409) {
       errorMessage.value = 'You have already posted today.'
     } else if (err.response?.status === 404) {
       errorMessage.value = 'No post found for today.'
+    } else if (err.response?.status === 400 && typeof err.response.data === 'string') {
+      errorMessage.value = err.response.data
     } else {
       errorMessage.value = 'Something went wrong. Please try again.'
     }
@@ -95,7 +114,7 @@ onBeforeUnmount(clearPreview)
       class="preview"
     />
 
-    <input type="file" accept="image/*" @change="onFileChange" />
+    <input ref="fileInput" type="file" :accept="ACCEPTED_TYPES" @change="onFileChange" />
 
     <div class="actions">
       <button :disabled="isSubmitting" @click="handleSubmit">

@@ -11,7 +11,7 @@ namespace JustOne.Data
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            foreach (var role in new[] { Roles.Admin, Roles.User })
+            foreach (var role in new[] { Roles.Admin, Roles.Manager, Roles.User })
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {

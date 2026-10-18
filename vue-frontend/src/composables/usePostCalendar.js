@@ -88,12 +88,6 @@ export function usePostCalendar() {
   // (e.g. right after login, when no token existed yet before).
   watch([viewYear, viewMonth, () => authStore.isLoggedIn], fetchMonth, { immediate: true })
 
-  const hasPostedToday = computed(() => {
-    if (!isCurrentMonth.value) return false
-    const entry = monthDays.value.find((d) => d.day === CURRENT_DAY)
-    return entry?.status === 'posted'
-  })
-
   const todayImageUrl = computed(() => {
     if (!isCurrentMonth.value) return null
     const entry = monthDays.value.find((d) => d.day === CURRENT_DAY)
@@ -125,7 +119,6 @@ export function usePostCalendar() {
     prevMonth,
     nextMonth,
     monthDays,
-    hasPostedToday,
     todayImageUrl,
     recordPost,
     removePost,

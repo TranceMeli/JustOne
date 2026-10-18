@@ -135,6 +135,8 @@ namespace JustOne.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("GuestbookEntries");
                 });
 
@@ -156,6 +158,8 @@ namespace JustOne.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("Posts");
                 });
@@ -187,6 +191,11 @@ namespace JustOne.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
                 });

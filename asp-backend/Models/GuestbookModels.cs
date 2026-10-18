@@ -1,5 +1,7 @@
-﻿namespace JustOne.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public record CreateGuestbookEntryRequest(string Message);
+namespace JustOne.Models;
+
+public record CreateGuestbookEntryRequest([StringLength(2000)] string Message);
 
 public record GuestbookEntryResponse(int Id, string Message, DateTime CreatedAt);

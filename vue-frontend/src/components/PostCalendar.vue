@@ -95,8 +95,8 @@ function onSquareClick(day) {
   inset: 0;
   z-index: 0;
   background-color: #08d9d6;
-  -webkit-mask-image: url('/day-square-mask.svg');
-  mask-image: url('/day-square-mask.svg');
+  -webkit-mask-image: url('/day-square.svg');
+  mask-image: url('/day-square.svg');
   -webkit-mask-size: cover;
   mask-size: cover;
   -webkit-mask-position: center;
