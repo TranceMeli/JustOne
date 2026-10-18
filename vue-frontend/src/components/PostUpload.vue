@@ -132,19 +132,44 @@ onBeforeUnmount(clearPreview)
 <style scoped>
 .upload-box {
   max-width: 400px;
-  margin: 20px auto 0;
+  margin: 28px auto 0;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
-  font-family: system-ui, sans-serif;
+  border: 2px dashed var(--color-cyan);
+  border-radius: var(--radius);
+  background: var(--color-cyan-soft);
 }
 
 .preview {
   width: 120px;
   height: 120px;
   object-fit: cover;
-  border-radius: 4px;
+  border: 3px solid var(--color-dark);
+  border-radius: var(--radius);
+  box-shadow: 4px 4px 0 var(--color-pink);
+}
+
+input[type='file'] {
+  color: var(--color-dark);
+}
+
+input[type='file']::file-selector-button {
+  margin-right: 10px;
+  padding: 6px 12px;
+  background: var(--color-light);
+  color: var(--color-dark);
+  border: 2px solid var(--color-dark);
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+input[type='file']::file-selector-button:hover {
+  background: var(--color-cyan);
 }
 
 .actions {
@@ -154,16 +179,29 @@ onBeforeUnmount(clearPreview)
 
 button {
   padding: 10px 20px;
-  background: #ff2e63;
-  color: #eaeaea;
-  border: none;
-  border-radius: 4px;
+  background: var(--color-pink);
+  color: var(--color-light);
+  border: 2px solid var(--color-pink);
+  border-radius: var(--radius);
   cursor: pointer;
   font-weight: 700;
 }
 
+button:not(:disabled):hover {
+  background: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
 .delete-button {
-  background: #252a34;
+  background: transparent;
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.delete-button:not(:disabled):hover {
+  background: var(--color-pink);
+  border-color: var(--color-pink);
+  color: var(--color-light);
 }
 
 button:disabled {
@@ -172,7 +210,7 @@ button:disabled {
 }
 
 .error {
-  color: #ff2e63;
+  color: var(--color-pink);
   font-weight: 600;
 }
 </style>

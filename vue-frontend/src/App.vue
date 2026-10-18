@@ -8,6 +8,8 @@ import PostCalendar from './components/PostCalendar.vue'
 import PostUpload from './components/PostUpload.vue'
 import ImageModal from './components/ImageModal.vue'
 import Guestbook from './components/Guestbook.vue'
+import AppHeader from './components/AppHeader.vue'
+import AppFooter from './components/AppFooter.vue'
 
 const authStore = useAuthStore()
 const selectedImage = ref(null)
@@ -48,6 +50,8 @@ function onDeleted() {
 </script>
 
 <template>
+  <AppHeader />
+
   <main>
     <template v-if="!authStore.isLoggedIn">
       <Login v-if="!showRegister" @switch-to-register="showRegister = true" />
@@ -58,7 +62,6 @@ function onDeleted() {
       <nav class="month-nav">
         <button :disabled="!canGoPrev" @click="prevMonth">&larr; Previous Month</button>
         <button :disabled="!canGoNext" @click="nextMonth">Next Month &rarr;</button>
-        <button type="button" @click="authStore.logout()">Log out</button>
       </nav>
 
       <p v-if="isLoading" class="status-text">Loading calendar...</p>
@@ -66,7 +69,6 @@ function onDeleted() {
 
       <PostCalendar
         v-else
-        :username="authStore.email"
         :month-label="monthLabel"
         :days="monthDays"
         @select-image="selectedImage = $event"
@@ -88,25 +90,38 @@ function onDeleted() {
       @close="selectedImage = null"
     />
   </main>
+
+  <AppFooter />
 </template>
 
 <style scoped>
+main {
+  flex: 1;
+  /* Side gutter on small screens; the extra right space leaves room for the card's offset shadow. */
+  padding: 0 24px 0 16px;
+}
+
 .month-nav {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 16px;
-  margin: 16px 0;
-  font-family: system-ui, sans-serif;
+  margin: 24px 0 16px;
 }
 
 .month-nav button {
   padding: 8px 16px;
-  background: #252a34;
-  color: #eaeaea;
-  border: none;
-  border-radius: 4px;
+  background: var(--color-dark);
+  color: var(--color-light);
+  border: 2px solid var(--color-dark);
+  border-radius: var(--radius);
   cursor: pointer;
   font-weight: 600;
+}
+
+.month-nav button:not(:disabled):hover {
+  background: var(--color-cyan);
+  color: var(--color-dark);
 }
 
 .month-nav button:disabled {
@@ -114,13 +129,24 @@ function onDeleted() {
   cursor: not-allowed;
 }
 
+@media (max-width: 480px) {
+  .month-nav {
+    gap: 8px;
+  }
+
+  .month-nav button {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+}
+
 .status-text {
   text-align: center;
-  font-family: system-ui, sans-serif;
-  color: #252a34;
+  color: var(--color-dark);
 }
 
 .status-text.error {
-  color: #ff2e63;
+  color: var(--color-pink);
+  font-weight: 600;
 }
 </style>

@@ -66,7 +66,7 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return BadRequest(error);
         }
 
-        var today = DateTime.UtcNow.Date;
+        var today = UserToday();
 
         var alreadyPostedToday = await db.Posts
             .AnyAsync(p => p.UserId == UserId && p.CreatedAt == today);
@@ -98,7 +98,7 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return BadRequest(error);
         }
 
-        var today = DateTime.UtcNow.Date;
+        var today = UserToday();
 
         var post = await db.Posts
             .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt == today);
@@ -117,7 +117,7 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
     [HttpDelete]
     public async Task<IActionResult> Delete()
     {
-        var today = DateTime.UtcNow.Date;
+        var today = UserToday();
 
         var post = await db.Posts
             .FirstOrDefaultAsync(p => p.UserId == UserId && p.CreatedAt == today);
@@ -184,6 +184,29 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             .FirstOrDefaultAsync();
 
         return imagePath is null ? NotFound() : Ok(new { ImagePath = imagePath });
+    }
+
+    // "Today" in the user's own time zone (sent by the frontend as an IANA id, e.g. "Europe/Berlin").
+    // A post's CreatedAt is that local calendar day, stored as midnight. Falls back to UTC.
+    private DateTime UserToday()
+    {
+        var timeZone = TimeZoneInfo.Utc;
+        var timeZoneId = Request.Headers["X-Timezone"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            try
+            {
+                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
+            catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+            {
+                // Unknown id - keep UTC.
+            }
+        }
+
+        var localDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone).Date;
+        return DateTime.SpecifyKind(localDate, DateTimeKind.Utc);
     }
 
     private static string? ValidateFile(IFormFile file)

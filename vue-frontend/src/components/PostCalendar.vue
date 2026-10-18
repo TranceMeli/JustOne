@@ -1,10 +1,14 @@
 <script setup>
-defineProps({
-  appName: { type: String, default: 'JustOne' },
-  username: { type: String, required: true },
+import { computed } from 'vue'
+
+const props = defineProps({
   monthLabel: { type: String, required: true },
   days: { type: Array, required: true }
 })
+
+// Days that have already started (everything except the future), and how many got a photo.
+const postedCount = computed(() => props.days.filter((d) => d.status === 'posted').length)
+const elapsedCount = computed(() => props.days.filter((d) => d.status !== 'future').length)
 
 const emit = defineEmits(['select-image'])
 
@@ -18,8 +22,10 @@ function onSquareClick(day) {
 <template>
   <div class="calendar-card">
     <header class="calendar-header">
-      <span class="app-name">{{ appName }}</span>
-      <span>Logged in as {{ username }}</span>
+      <span class="app-name">My Calendar</span>
+      <span class="stats">
+        <strong>{{ postedCount }}</strong> / {{ elapsedCount }} days posted
+      </span>
     </header>
 
     <h2 class="calendar-title">{{ monthLabel }}</h2>
@@ -47,13 +53,17 @@ function onSquareClick(day) {
 .calendar-card {
   max-width: 760px;
   margin: 0 auto;
-  font-family: system-ui, sans-serif;
-  background: #eaeaea;
+  background: var(--color-light);
+  border: 2px solid var(--color-dark);
+  border-radius: var(--radius);
+  box-shadow: 8px 8px 0 var(--color-pink);
+  overflow: hidden;
 }
 
 .calendar-header {
-  background: #08d9d6;
-  color: #252a34;
+  background: var(--color-cyan);
+  color: var(--color-dark);
+  border-bottom: 4px solid var(--color-dark);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -62,11 +72,17 @@ function onSquareClick(day) {
   font-size: 1.1rem;
 }
 
+.app-name {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
 .calendar-title {
   text-align: center;
   font-size: 1.8rem;
   font-weight: 800;
-  color: #252a34;
+  color: var(--color-dark);
   letter-spacing: 1px;
   margin: 28px 0;
 }
@@ -78,14 +94,61 @@ function onSquareClick(day) {
   padding: 0 24px 28px;
 }
 
+.stats {
+  padding: 4px 12px;
+  background: var(--color-dark);
+  color: var(--color-light);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.stats strong {
+  color: var(--color-cyan);
+}
+
+@media (max-width: 480px) {
+  .calendar-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .stats {
+    font-size: 0.8rem;
+  }
+
+
+  .calendar-title {
+    font-size: 1.4rem;
+    margin: 20px 0;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px;
+    padding: 0 12px 16px;
+  }
+
+  .day-number {
+    font-size: 1.1rem;
+  }
+
+  .today-label {
+    font-size: 0.7rem;
+  }
+}
+
 .day-square {
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: 4px;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
 /* Separate layer for the SVG graphic. The SVG itself has no color (only brightness/shape) -
@@ -94,7 +157,8 @@ function onSquareClick(day) {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-color: #08d9d6;
+  background-color: var(--color-cyan);
+  transition: background-color var(--transition);
   -webkit-mask-image: url('/day-square.svg');
   mask-image: url('/day-square.svg');
   -webkit-mask-size: cover;
@@ -115,8 +179,22 @@ function onSquareClick(day) {
   cursor: pointer;
 }
 
+.day-square.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 3px var(--color-cyan), 5px 5px 0 3px var(--color-dark);
+}
+
 .day-square.missed .square-bg {
-  background-color: #ff2e63;
+  background-color: var(--color-pink);
+}
+
+.day-square.missed:hover .square-bg {
+  background-color: var(--color-dark);
+}
+
+.day-square.missed:hover .day-number {
+  color: var(--color-pink);
+  text-shadow: none;
 }
 
 .day-square.future .square-bg,
@@ -125,12 +203,20 @@ function onSquareClick(day) {
 }
 
 .day-square.future {
-  border: 1px dashed #cfcfcf;
+  border: 1px dashed var(--color-muted);
+  opacity: 0.5;
 }
 
 .day-square.today {
-  background: #eaeaea;
-  border: 2px dashed #252a34;
+  background: var(--color-cyan-soft);
+  border: 2px dashed var(--color-cyan);
+  animation: today-pulse 2s ease-in-out infinite;
+}
+
+@keyframes today-pulse {
+  50% {
+    border-color: var(--color-pink);
+  }
 }
 
 .today-label {
@@ -138,7 +224,7 @@ function onSquareClick(day) {
   z-index: 1;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #252a34;
+  color: var(--color-dark);
 }
 
 .day-number {
@@ -146,7 +232,15 @@ function onSquareClick(day) {
   z-index: 1;
   font-size: 1.6rem;
   font-weight: 800;
-  color: #252a34;
+  color: var(--color-dark);
+  transition: color var(--transition);
   text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-square {
+    transition: none;
+    animation: none;
+  }
 }
 </style>

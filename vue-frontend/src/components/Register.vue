@@ -60,7 +60,17 @@ async function handleRegister() {
 .register-box {
   max-width: 320px;
   margin: 40px auto;
-  font-family: system-ui, sans-serif;
+  padding: 24px;
+  background: var(--color-light);
+  border: 2px solid var(--color-dark);
+  border-top: 6px solid var(--color-cyan);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--color-pink);
+}
+
+h2 {
+  margin-top: 0;
+  color: var(--color-dark);
 }
 
 form {
@@ -71,17 +81,25 @@ form {
 
 input {
   padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 2px solid var(--color-muted);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-dark);
 }
 
 button {
   padding: 8px;
-  background: #4fc08d;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
+  background: var(--color-cyan);
+  color: var(--color-dark);
+  border: 2px solid var(--color-dark);
+  border-radius: var(--radius);
   cursor: pointer;
+  font-weight: 700;
+}
+
+button:not(:disabled):hover {
+  background: var(--color-pink);
+  color: var(--color-light);
 }
 
 button:disabled {
@@ -90,7 +108,8 @@ button:disabled {
 }
 
 .error {
-  color: #e63946;
+  color: var(--color-pink);
+  font-weight: 600;
 }
 
 .switch-link {

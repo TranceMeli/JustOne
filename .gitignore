@@ -1,14 +1,14 @@
 # .NET build output
 **/bin/
 **/obj/
-*.csproj.user
+*.user
 *.suo
 .vs/
 
-# Local database and SQLite journal files
-/asp-backend/justone.db
-/asp-backend/justone.db-shm
-/asp-backend/justone.db-wal
+# Local SQLite databases (incl. journal files), e.g. justone.db
+/asp-backend/*.db
+/asp-backend/*.db-shm
+/asp-backend/*.db-wal
 
 # User-uploaded content
 /asp-backend/wwwroot/uploads/
@@ -22,6 +22,16 @@
 **/.env
 **/.env.*
 !**/.env.example
+
+# Logs
+*.log
+logs/
+
+# Editors and IDEs (shared VS Code settings stay tracked)
+.idea/
+
+# Claude Code: personal settings stay local, launch.json is shared
+.claude/settings.local.json
 
 # Operating system files
 .DS_Store

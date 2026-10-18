@@ -85,14 +85,23 @@ onMounted(fetchEntries)
 <style scoped>
 .guestbook {
   max-width: 600px;
-  margin: 32px auto 0;
-  font-family: system-ui, sans-serif;
-  color: #252a34;
+  margin: 40px auto;
+  color: var(--color-dark);
 }
 
 .guestbook h3 {
   text-align: center;
   margin-bottom: 12px;
+}
+
+.guestbook h3::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin: 6px auto 0;
+  background: var(--color-pink);
+  border-radius: 2px;
 }
 
 .entry-form {
@@ -103,8 +112,10 @@ onMounted(fetchEntries)
 
 textarea {
   padding: 10px;
-  border: 1px solid #cfcfcf;
-  border-radius: 4px;
+  border: 2px solid var(--color-muted);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-dark);
   font-family: inherit;
   resize: vertical;
 }
@@ -112,12 +123,17 @@ textarea {
 .entry-form button {
   align-self: flex-end;
   padding: 8px 20px;
-  background: #08d9d6;
-  color: #252a34;
-  border: none;
-  border-radius: 4px;
+  background: var(--color-cyan);
+  color: var(--color-dark);
+  border: 2px solid var(--color-dark);
+  border-radius: var(--radius);
   cursor: pointer;
   font-weight: 700;
+}
+
+.entry-form button:not(:disabled):hover {
+  background: var(--color-pink);
+  color: var(--color-light);
 }
 
 .entry-form button:disabled {
@@ -127,10 +143,11 @@ textarea {
 
 .status-text {
   text-align: center;
+  color: var(--color-muted);
 }
 
 .error {
-  color: #ff2e63;
+  color: var(--color-pink);
   text-align: center;
   font-weight: 600;
 }
@@ -145,17 +162,26 @@ textarea {
 }
 
 .entry {
-  background: #eaeaea;
-  border-radius: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-dark);
+  border-left: 5px solid var(--color-cyan);
+  border-radius: var(--radius);
   padding: 10px 14px;
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.entry:hover {
+  border-left-color: var(--color-pink);
+  transform: translateX(3px);
 }
 
 .entry-message {
   margin: 0 0 4px;
+  white-space: pre-wrap;
 }
 
 .entry-date {
   font-size: 0.8rem;
-  color: #6b6f76;
+  color: var(--color-muted);
 }
 </style>

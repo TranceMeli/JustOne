@@ -19,7 +19,7 @@ namespace JustOne.Data
                 }
             }
 
-            const string adminEmail = "admin@codewithmukesh.com";
+            const string adminEmail = "admin@justone.com";
             if (await userManager.FindByEmailAsync(adminEmail) is null)
             {
                 var admin = new ApplicationUser

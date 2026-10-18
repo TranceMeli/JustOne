@@ -12,6 +12,8 @@ apiClient.interceptors.request.use((config) => {
   if (authStore.accessToken) {
     config.headers.Authorization = `Bearer ${authStore.accessToken}`
   }
+  // The backend decides what "today" is in the user's time zone, not in UTC.
+  config.headers['X-Timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone
   return config
 })
 
