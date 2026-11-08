@@ -18,21 +18,27 @@ A social network with one simple rule: **one photo per day, nothing more.** No e
 
 ### Monthly calendar
 
-The whole page: sticky header, month navigation, the calendar with a "days posted" counter, the upload box for today's photo, the guestbook and the footer.
+The month as a real calendar (Monday to Sunday) with a "days posted" counter. Missed days are marked with an icon and text, not only by color. Next to it sits the one task of the day: the "Today" card with drag & drop upload. Below it, the private guestbook.
 
-![JustOne calendar view with header, upload, guestbook and footer](docs/screenshot.jpeg)
+![JustOne calendar view with today card, guestbook and footer](docs/screenshot.jpeg)
 
 ### Comments
 
-The post view adapts to the photo: portrait images sit next to the comments, landscape images are shown above them.
+The photo view follows the theme and adapts to the photo: portrait images sit next to the comments, landscape images are shown above them. Arrow keys switch to the previous/next photo, Escape closes it.
 
 | Portrait photo | Landscape photo |
 | --- | --- |
 | ![Comments next to a portrait photo](docs/comments-screenshot.jpeg) | ![Comments below a landscape photo](docs/comments-landscape-screenshot.jpeg) |
 
+### Dark mode
+
+Its own dark palette (not an inverted light theme): raised surfaces get lighter, text is a soft white. The theme follows the system setting and can be switched in the header.
+
+![JustOne calendar in dark mode](docs/dark-screenshot.jpeg)
+
 ### Login and mobile view
 
-The login page shares the header and footer. On phones the calendar switches to a compact five-column grid.
+Forms with visible labels, a demo-account button and error messages that explain what to do. On phones the most important card – today's photo – comes first.
 
 | Login | Mobile |
 | --- | --- |
@@ -54,18 +60,25 @@ Every user sees their month as a grid of boxes, one per day. If a photo was post
 - **Daily comments**: comments attached directly to a post, with author display
 - **Guestbook**: a dedicated section below the calendar
 - **Comment box**: auto-growing text field, emoji picker, Enter to send, character counter
-- **Responsive design**: sticky header with user menu, footer, hover/focus states and a dedicated mobile layout
+- **Feedback for every state**: skeletons while loading, errors with a "Try again" action, confirmation before deleting, toasts after posting
+- **Dark mode**: follows the system, switchable (system / light / dark) in the header
+- **Accessible**: WCAG AA contrast for all text, keyboard-operable calendar and dialogs, visible focus, labelled form fields, `prefers-reduced-motion` respected
+- **Responsive design**: two columns on desktop, one column on phones with today's task first
 
 ## Design
 
-All colors come from one palette, defined once as CSS variables in [`theme.css`](vue-frontend/src/assets/theme.css) and used by every component:
+The design follows common UI/UX guidelines (Nielsen heuristics, WCAG, 60-30-10 color rule). The mockups and the reasoning behind them are in [`docs/mockups`](docs/mockups/index.html).
 
-| Color | Hex | Used for |
+All colors are defined once as fixed scales (50–900) in [`theme.css`](vue-frontend/src/assets/theme.css). Components only use semantic roles such as `--accent`, `--surface` or `--missed`, so light and dark mode switch automatically.
+
+| Color | Base | Role |
 | --- | --- | --- |
-| ![cyan](https://img.shields.io/badge/-%20-08d9d6?style=flat-square) Cyan | `#08d9d6` | header accents, calendar header, footer, primary buttons |
-| ![dark](https://img.shields.io/badge/-%20-252a34?style=flat-square) Dark | `#252a34` | header, text, borders, modal background |
-| ![pink](https://img.shields.io/badge/-%20-ff2e63?style=flat-square) Pink | `#ff2e63` | missed days, offset shadows, hover states, errors |
-| ![light](https://img.shields.io/badge/-%20-eaeaea?style=flat-square) Light | `#eaeaea` | page background, text on dark surfaces |
+| ![indigo](https://img.shields.io/badge/-%20-5b6cff?style=flat-square) Indigo | `#5b6cff` | primary color: logo, primary buttons, links, focus, today, progress |
+| ![pink](https://img.shields.io/badge/-%20-ff2e63?style=flat-square) Pink | `#ff2e63` | secondary color: missed days, avatars |
+| ![gray](https://img.shields.io/badge/-%20-252a34?style=flat-square) Gray | `#252a34` | text, header and footer, dark mode surfaces |
+| ![red](https://img.shields.io/badge/-%20-c42b2b?style=flat-square) Red | `#c42b2b` | errors and delete only (independent of the brand) |
+
+Typography: one system font stack (Segoe UI, SF Pro, Roboto …), sizes in `rem` from 12 to 32 px, body text 16 px with line height 1.5.
 
 ## Tech Stack
 
@@ -84,13 +97,13 @@ JustOne/
 │   ├── Data/                  # AppDbContext, DbSeeder
 │   ├── Migrations/            # EF Core migrations
 │   └── Auth/                  # JWT settings, TokenService
-├── docs/                      # Screenshots for this README
+├── docs/                      # Screenshots for this README, design mockups
 └── vue-frontend/              # Vue 3 frontend
     └── src/
-        ├── components/        # AppHeader, AppFooter, Login, Register, PostCalendar,
-        │                      # PostUpload, Comments, Guestbook, ImageModal
-        ├── assets/            # theme.css (color palette as CSS variables)
-        ├── composables/       # usePostCalendar
+        ├── components/        # AppHeader, AppFooter, PostCalendar, TodayCard, ImageModal,
+        │                      # Comments, Guestbook, Login, Register, ConfirmDialog, ToastHost
+        ├── assets/            # theme.css (design tokens: colors, type, spacing; light + dark)
+        ├── composables/       # usePostCalendar, useTheme, useToast
         ├── stores/            # auth (Pinia)
         └── api/               # Axios client with auth interceptor
 ```
