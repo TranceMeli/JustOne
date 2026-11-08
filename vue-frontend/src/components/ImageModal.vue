@@ -1,195 +1,243 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import Comments from './Comments.vue'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
-  imageUrl: { type: String, default: null },
-  postId: { type: Number, default: null }
+  // The opened calendar day ({ day, imageUrl, postId }) or null when closed
+  entry: { type: Object, default: null },
+  year: { type: Number, required: true },
+  month: { type: Number, required: true },
+  // All posted days of the month, for previous/next navigation
+  postedDays: { type: Array, default: () => [] }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'navigate'])
 
 const isZoomed = ref(false)
+const closeButton = ref(null)
+let returnFocusTo = null
 
-// 'portrait' | 'landscape' - decides whether image and comments sit side by side or stacked.
+// 'portrait' | 'landscape' - decides whether photo and comments sit side by side or stacked.
 const orientation = ref('portrait')
+
+const title = computed(() =>
+  props.entry
+    ? new Date(props.year, props.month - 1, props.entry.day).toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      })
+    : ''
+)
+
+const index = computed(() => props.postedDays.findIndex((d) => d.day === props.entry?.day))
+const prevEntry = computed(() => (index.value > 0 ? props.postedDays[index.value - 1] : null))
+const nextEntry = computed(() =>
+  index.value !== -1 && index.value < props.postedDays.length - 1 ? props.postedDays[index.value + 1] : null
+)
 
 function onImageLoad(event) {
   const { naturalWidth, naturalHeight } = event.target
   orientation.value = naturalWidth > naturalHeight ? 'landscape' : 'portrait'
 }
 
-// Don't stay stuck in zoom mode when opening a different post (or closing).
-watch(() => props.imageUrl, () => {
-  isZoomed.value = false
-})
-
 function onKeydown(event) {
-  if (event.key !== 'Escape' || !props.imageUrl) return
-  if (isZoomed.value) {
-    isZoomed.value = false
-  } else {
-    emit('close')
+  // Don't steal arrow keys while the user is typing a comment.
+  const typing = ['TEXTAREA', 'INPUT'].includes(document.activeElement?.tagName)
+
+  if (event.key === 'Escape') {
+    if (isZoomed.value) isZoomed.value = false
+    else emit('close')
+  } else if (!typing && event.key === 'ArrowLeft' && prevEntry.value) {
+    emit('navigate', prevEntry.value)
+  } else if (!typing && event.key === 'ArrowRight' && nextEntry.value) {
+    emit('navigate', nextEntry.value)
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+watch(
+  () => !!props.entry,
+  async (open) => {
+    if (open) {
+      returnFocusTo = document.activeElement
+      window.addEventListener('keydown', onKeydown)
+      document.body.style.overflow = 'hidden'
+      await nextTick()
+      closeButton.value?.focus()
+    } else {
+      window.removeEventListener('keydown', onKeydown)
+      document.body.style.overflow = ''
+      returnFocusTo?.focus?.()
+    }
+  }
+)
+
+// Don't stay stuck in zoom mode when switching to a different photo.
+watch(() => props.entry?.postId, () => (isZoomed.value = false))
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <template>
   <Teleport to="body">
-    <div v-if="imageUrl" class="modal-backdrop" @click="emit('close')">
-      <div class="modal-content" :class="orientation" role="dialog" aria-modal="true" @click.stop>
-        <button class="close-button" aria-label="Close" @click="emit('close')">&times;</button>
-        <div class="thumb-frame">
-          <img
-            :src="imageUrl"
-            alt="Post preview - click for full size"
-            class="thumb"
-            @load="onImageLoad"
-            @click="isZoomed = true"
-          />
+    <div v-if="entry" class="backdrop" @click.self="emit('close')">
+      <div class="modal" :class="orientation" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-head">
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon"
+            :disabled="!prevEntry"
+            aria-label="Previous photo"
+            @click="emit('navigate', prevEntry)"
+          >
+            <AppIcon name="prev" />
+          </button>
+          <h2 id="modal-title">{{ title }}</h2>
+          <button
+            type="button"
+            class="btn btn-ghost btn-icon"
+            :disabled="!nextEntry"
+            aria-label="Next photo"
+            @click="emit('navigate', nextEntry)"
+          >
+            <AppIcon name="next" />
+          </button>
+          <button ref="closeButton" type="button" class="btn btn-secondary close" @click="emit('close')">
+            <AppIcon name="close" />
+            <span class="close-label">Close</span>
+          </button>
+        </header>
+
+        <div class="photo-area">
+          <button type="button" class="photo-button" aria-label="Show photo at full size" @click="isZoomed = true">
+            <img :src="entry.imageUrl" :alt="`Photo from ${title}`" @load="onImageLoad" />
+          </button>
+          <span class="zoom-hint" aria-hidden="true">Click to enlarge</span>
         </div>
-        <Comments :post-id="postId" />
+
+        <Comments :post-id="entry.postId" />
       </div>
     </div>
 
-    <!-- Second layer: full-size image, on top of the box -->
-    <div v-if="imageUrl && isZoomed" class="zoom-backdrop" @click="isZoomed = false">
-      <img :src="imageUrl" alt="Post at full size" class="zoom-image" />
+    <!-- Second layer: full-size photo -->
+    <div v-if="entry && isZoomed" class="zoom-backdrop" role="button" aria-label="Close full size view" @click="isZoomed = false">
+      <img :src="entry.imageUrl" :alt="`Photo from ${title} at full size`" class="zoom-image" />
     </div>
   </Teleport>
 </template>
 
 <style scoped>
-.modal-backdrop {
+.backdrop {
   position: fixed;
   inset: 0;
-  padding: 16px;
-  background: rgba(37, 42, 52, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--overlay);
 }
 
-.modal-content {
-  position: relative;
-  display: flex;
-  gap: 20px;
-  background: var(--color-dark);
-  border: 2px solid var(--color-cyan);
-  border-radius: 8px;
-  box-shadow: 8px 8px 0 var(--color-pink);
-  padding: 20px;
+.modal {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
-/* Portrait image: image left, comments right. */
-.modal-content.portrait {
-  flex-direction: row;
-  width: min(92vw, 900px);
-  height: min(85vh, 640px);
+/* Portrait photo: photo left, comments right */
+.modal.portrait {
+  width: min(920px, 100%);
+  height: min(620px, 100%);
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
-.modal-content.portrait .thumb-frame {
-  flex: 0 1 auto;
-  max-width: 55%;
-  height: 100%;
+/* Landscape photo: photo on top, comments below */
+.modal.landscape {
+  width: min(780px, 100%);
+  height: min(860px, 100%);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
-.modal-content.portrait .comments {
-  min-width: 260px;
-}
-
-/* Landscape image: image on top across the full width, comments below. */
-.modal-content.landscape {
-  flex-direction: column;
-  width: min(92vw, 760px);
-  height: min(90vh, 820px);
-}
-
-.modal-content.landscape .thumb-frame {
-  flex: 0 1 auto;
-  width: 100%;
-  max-height: 55%;
-}
-
-.thumb-frame {
+.modal-head {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 0;
-  background: var(--color-dark-deep);
-  border-radius: var(--radius);
-  overflow: hidden;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
-.thumb {
+.modal-head h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.close {
+  margin-left: auto;
+}
+
+.photo-area {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: var(--gray-950);
+}
+
+.modal.landscape .photo-area {
+  max-height: min(48vh, 460px);
+}
+
+.photo-button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.photo-button img {
   display: block;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border: 2px solid transparent;
-  border-radius: var(--radius);
-  cursor: zoom-in;
-  transition: border-color var(--transition);
 }
 
-.modal-content.portrait .thumb {
-  height: 100%;
+.modal.landscape .photo-button img {
+  max-height: min(48vh, 460px);
 }
 
-/* A percentage max-height would not resolve here (the frame has no fixed height). */
-.modal-content.landscape .thumb {
-  width: 100%;
-  max-height: min(48vh, 440px);
-}
-
-.thumb:hover {
-  border-color: var(--color-cyan);
-}
-
-/* Portrait screens (phones, upright tablets): always stack, whatever the image format. */
-@media (max-width: 700px), (orientation: portrait) and (max-width: 1024px) {
-  .modal-content.portrait,
-  .modal-content.landscape {
-    flex-direction: column;
-    width: min(94vw, 560px);
-    height: min(90vh, 860px);
-    gap: 14px;
-    padding: 16px;
-  }
-
-  .modal-content.portrait .thumb-frame,
-  .modal-content.landscape .thumb-frame {
-    width: 100%;
-    max-width: none;
-    height: auto;
-    max-height: 50%;
-  }
-
-  .modal-content.portrait .thumb,
-  .modal-content.landscape .thumb {
-    width: auto;
-    height: auto;
-    max-height: min(42vh, 420px);
-  }
-
-  .modal-content.portrait .comments {
-    min-width: 0;
-  }
+.zoom-hint {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(26, 30, 39, 0.75);
+  color: #e6e8ec;
+  font-size: var(--text-xs);
+  pointer-events: none;
 }
 
 .zoom-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1100;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.92);
   cursor: zoom-out;
 }
 
@@ -197,32 +245,41 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   max-width: 95vw;
   max-height: 95vh;
   object-fit: contain;
-  border: 3px solid var(--color-light);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
 }
 
-.close-button {
-  position: absolute;
-  top: -14px;
-  right: -14px;
-  z-index: 1;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--color-dark);
-  background: var(--color-pink);
-  color: var(--color-light);
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Phones and upright tablets: always full screen and stacked */
+@media (max-width: 700px), (orientation: portrait) and (max-width: 1024px) {
+  .backdrop {
+    padding: 0;
+  }
 
-.close-button:hover {
-  background: var(--color-cyan);
-  color: var(--color-dark);
-  transform: rotate(90deg);
+  .modal.portrait,
+  .modal.landscape {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .photo-area,
+  .modal.landscape .photo-area {
+    max-height: 40vh;
+  }
+
+  .photo-button img,
+  .modal.landscape .photo-button img {
+    max-height: 40vh;
+  }
+
+  .close-label {
+    display: none;
+  }
+
+  .close {
+    width: 40px;
+    padding: 0;
+  }
 }
 </style>

@@ -82,13 +82,22 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // CORS: allows the local Vue dev server (Vite) to call the backend.
+// In development any localhost port is accepted, because Vite moves to 5174, 5175, ...
+// when 5173 is already taken by another project.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueDev", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback);
+        }
+        else
+        {
+            policy.WithOrigins("http://localhost:5173");
+        }
+
+        policy.AllowAnyHeader().AllowAnyMethod();
     });
 });
 

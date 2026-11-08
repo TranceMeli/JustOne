@@ -74,7 +74,7 @@ public class AuthController(
         await db.SaveChangesAsync();
 
         return Ok(new AuthResponse(
-            user.Id, user.Email!, roles,
+            user.Id, user.Email!, user.FirstName, roles,
             accessToken, accessExpiresAt,
             refreshToken, refreshExpiresAt));
     }
@@ -128,7 +128,7 @@ public class AuthController(
         var (accessToken, accessExpiresAt) = tokenService.CreateAccessToken(user, roles);
 
         return Ok(new AuthResponse(
-            user.Id, user.Email!, roles,
+            user.Id, user.Email!, user.FirstName, roles,
             accessToken, accessExpiresAt,
             newRefreshToken, refreshExpiresAt));
     }

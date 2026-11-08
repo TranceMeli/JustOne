@@ -11,22 +11,26 @@ export const useAuthStore = defineStore('auth', {
     refreshToken: localStorage.getItem('refreshToken') || null,
     refreshTokenExpiresAt: localStorage.getItem('refreshTokenExpiresAt') || null,
     email: localStorage.getItem('email') || null,
+    firstName: localStorage.getItem('firstName') || null,
     roles: JSON.parse(localStorage.getItem('roles') || '[]')
   }),
 
   getters: {
     isLoggedIn: (state) => !!state.accessToken,
-    isAdmin: (state) => state.roles.includes('Admin')
+    isAdmin: (state) => state.roles.includes('Admin'),
+    // First name if the account has one, otherwise the part of the email before the @.
+    displayName: (state) => state.firstName || state.email?.split('@')[0] || ''
   },
 
   actions: {
-    // Matches AuthResponse(userId, email, roles, accessToken, accessExpiresAt, refreshToken, refreshTokenExpiresAt)
+    // Matches AuthResponse(userId, email, firstName, roles, accessToken, accessExpiresAt, refreshToken, refreshTokenExpiresAt)
     setSession(data) {
       this.accessToken = data.accessToken
       this.accessExpiresAt = data.accessExpiresAt
       this.refreshToken = data.refreshToken
       this.refreshTokenExpiresAt = data.refreshTokenExpiresAt
       this.email = data.email
+      this.firstName = data.firstName || null
       this.roles = data.roles
 
       localStorage.setItem('accessToken', data.accessToken)
@@ -34,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('refreshToken', data.refreshToken)
       localStorage.setItem('refreshTokenExpiresAt', data.refreshTokenExpiresAt)
       localStorage.setItem('email', data.email)
+      localStorage.setItem('firstName', data.firstName || '')
       localStorage.setItem('roles', JSON.stringify(data.roles))
     },
 
@@ -83,14 +88,12 @@ export const useAuthStore = defineStore('auth', {
       this.refreshToken = null
       this.refreshTokenExpiresAt = null
       this.email = null
+      this.firstName = null
       this.roles = []
 
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('accessExpiresAt')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('refreshTokenExpiresAt')
-      localStorage.removeItem('email')
-      localStorage.removeItem('roles')
+      for (const key of ['accessToken', 'accessExpiresAt', 'refreshToken', 'refreshTokenExpiresAt', 'email', 'firstName', 'roles']) {
+        localStorage.removeItem(key)
+      }
 
       // Best effort: tell the backend to invalidate the refresh token.
       // Logout should still succeed even if this call fails.

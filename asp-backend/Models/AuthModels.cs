@@ -17,6 +17,7 @@
         public record AuthResponse(
             string UserId,
             string Email,
+            string FirstName,
             IEnumerable<string> Roles,
             string AccessToken,
             DateTime AccessExpiresAt,

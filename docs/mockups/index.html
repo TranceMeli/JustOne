@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JustOne Redesign</title>
+<style>
+/* =====================================================================
+   1. DESIGN TOKENS (proposal) - would become vue-frontend/src/assets/theme.css
+   ===================================================================== */
+:root {
+  /* Brand scales (50-900). Primary: indigo-500 = #5b6cff, secondary: pink-500 = #ff2e63, neutral: gray-900 = #252a34.
+     Cyan is kept only for the comparison sections (2b-2d). */
+  --indigo-50: #eef0ff; --indigo-100: #dfe3ff; --indigo-200: #c2c9ff; --indigo-300: #9ea8ff; --indigo-400: #7c88ff;
+  --indigo-500: #5b6cff; --indigo-600: #4352ea; --indigo-700: #3540c4; --indigo-800: #2d369c; --indigo-900: #283179;
+  --cyan-50: #e8fcfb; --cyan-100: #c5f7f6; --cyan-200: #8ef0ee; --cyan-300: #4ee6e3; --cyan-400: #08d9d6;
+  --cyan-500: #06b8b5; --cyan-600: #079391; --cyan-700: #0a7472; --cyan-800: #0d5c5b; --cyan-900: #0f4a49;
+
+  --pink-50: #fff0f4; --pink-100: #ffdce5; --pink-200: #ffb8cb; --pink-300: #ff86a5; --pink-400: #ff5a83;
+  --pink-500: #ff2e63; --pink-600: #e3164d; --pink-700: #c2103f; --pink-800: #9c0f35; --pink-900: #7d102e;
+
+  --gray-25: #fbfbfc; --gray-50: #f6f7f9; --gray-100: #eceef2; --gray-200: #dfe2e8; --gray-300: #c5cad3;
+  --gray-400: #9aa1ad; --gray-500: #6f7682; --gray-600: #555c68; --gray-700: #3d4350; --gray-800: #2c313c;
+  --gray-900: #252a34; --gray-950: #1a1e27;
+
+  --green-700: #1d7a46; --green-50: #e9f7ef;
+  --red-50: #fdecec; --red-300: #ff9b9b; --red-700: #c42b2b; --red-tint-dark: #3b2426;
+
+  /* Type scale (rem, 16px base) */
+  --text-xs: 0.75rem;   /* 12px - captions only */
+  --text-sm: 0.875rem;  /* 14px - labels, meta */
+  --text-md: 1rem;      /* 16px - body */
+  --text-lg: 1.25rem;   /* 20px - card titles */
+  --text-xl: 1.5rem;    /* 24px - page titles */
+  --text-2xl: 2rem;     /* 32px - hero */
+  --font-ui: system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Spacing (4px grid), radius, motion */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+  --motion: 150ms ease-out;
+}
+
+/* Semantic roles - light (default) */
+.app, .tokens-light {
+  --bg: var(--gray-100);
+  --surface: var(--gray-25);
+  --surface-sunken: var(--gray-50);
+  --surface-inverse: var(--gray-900);
+  --text: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-on-accent: var(--gray-25);
+  --text-inverse: var(--gray-100);
+  --border: var(--gray-200);
+  --border-strong: var(--gray-500);
+  --accent: var(--indigo-600);
+  --accent-hover: var(--indigo-700);
+  --accent-text: var(--indigo-700);
+  --focus: var(--indigo-600);
+  --brand-on-dark: var(--indigo-300);
+  --danger: var(--red-700);
+  --danger-bg: var(--red-50);
+  --missed: var(--pink-700);
+  --missed-bg: var(--pink-50);
+  --brand-pink: var(--pink-500);
+  --success: var(--green-700);
+  --success-bg: var(--green-50);
+  --shadow: 0 1px 2px rgba(37, 42, 52, 0.06), 0 4px 16px rgba(37, 42, 52, 0.08);
+  --overlay: rgba(26, 30, 39, 0.6);
+}
+
+/* Semantic roles - dark: an own palette, not an inversion. Elevated layers get lighter. */
+.app[data-theme="dark"], .tokens-dark {
+  --bg: var(--gray-950);
+  --surface: var(--gray-900);
+  --surface-sunken: #20242d;
+  --surface-inverse: var(--gray-800);
+  --text: #e6e8ec;
+  --text-secondary: var(--gray-400);
+  --text-on-accent: var(--gray-950);
+  --text-inverse: #e6e8ec;
+  --border: var(--gray-800);
+  --border-strong: var(--gray-500);
+  --accent: var(--indigo-400);
+  --accent-hover: var(--indigo-300);
+  --accent-text: var(--indigo-300);
+  --focus: var(--indigo-300);
+  --brand-on-dark: var(--indigo-300);
+  --danger: var(--red-300);
+  --danger-bg: var(--red-tint-dark);
+  --missed: var(--pink-300);
+  --missed-bg: #3a2530;
+  --brand-pink: var(--pink-400);
+  --success: #6fd49b;
+  --success-bg: #1f3529;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* =====================================================================
+   2. MOCKUP PAGE CHROME (only for this document)
+   ===================================================================== */
+* { box-sizing: border-box; }
+body { margin: 0; background: #e4e6ea; color: #252a34; font: 16px/1.5 var(--font-ui); }
+.doc { max-width: 1320px; margin: 0 auto; padding: 32px 24px 80px; }
+.doc > header h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.02em; }
+.doc > header p { margin: 0; max-width: 72ch; color: #555c68; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; padding: 0; list-style: none; }
+.toc a { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #fbfbfc; color: #0d5c5b; font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid #dfe2e8; }
+.toc a:hover { border-color: #079391; }
+.doc > section { margin-top: 56px; }
+.doc > section > h2 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 6px; letter-spacing: -0.01em; }
+.doc > section > h2 + p { margin: 0 0 20px; max-width: 80ch; color: #555c68; }
+.doc > section > h3 { font-size: 1.05rem; margin: 28px 0 10px; }
+.note { margin-top: 10px; font-size: 0.875rem; color: #555c68; max-width: 90ch; }
+.note b { color: #252a34; }
+.pins { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 14px; padding: 0; list-style: none; counter-reset: pin; }
+.pins li { counter-increment: pin; background: #fbfbfc; border: 1px solid #dfe2e8; border-radius: 10px; padding: 10px 12px 10px 44px; position: relative; font-size: 0.875rem; }
+.pins li::before { content: counter(pin); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: #252a34; color: #fbfbfc; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; }
+.pin { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #252a34; color: #fbfbfc; font: 700 0.75rem/1 var(--font-ui); box-shadow: 0 0 0 3px #08d9d6; position: absolute; z-index: 20; }
+
+table.audit { width: 100%; border-collapse: collapse; background: #fbfbfc; border-radius: 10px; overflow: hidden; font-size: 0.875rem; }
+table.audit th, table.audit td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid #dfe2e8; }
+table.audit th { background: #252a34; color: #eceef2; font-weight: 600; }
+table.audit td:first-child { font-weight: 600; white-space: nowrap; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+.tag.fail { background: #fff0f4; color: #c2103f; }
+.tag.warn { background: #fff6e0; color: #7a5200; }
+.tag.ok { background: #e9f7ef; color: #1d7a46; }
+
+.frame { background: #fbfbfc; border: 1px solid #c5cad3; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(37,42,52,0.12); }
+.frame-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #dfe2e8; font-size: 0.75rem; color: #555c68; }
+.frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: #c5cad3; display: inline-block; }
+.frame-bar span { margin-left: 8px; padding: 2px 10px; background: #fbfbfc; border-radius: 6px; }
+.frame-row { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+.phone { width: 390px; flex: none; border: 10px solid #252a34; border-radius: 36px; overflow: hidden; box-shadow: 0 10px 30px rgba(37,42,52,0.2); position: relative; }
+.phone .app { height: 780px; overflow-y: auto; scrollbar-width: none; }
+.caption { font-size: 0.875rem; color: #555c68; margin: 8px 0 0; text-align: center; }
+.rel { position: relative; }
+
+/* token sheet */
+.scale { display: grid; grid-template-columns: 90px repeat(10, 1fr); gap: 4px; align-items: stretch; margin-bottom: 6px; font-size: 0.75rem; }
+.scale b { align-self: center; font-size: 0.875rem; }
+.sw { border-radius: 6px; padding: 26px 6px 6px; font-family: ui-monospace, Consolas, monospace; font-size: 0.68rem; line-height: 1.3; }
+.sw.base { outline: 3px solid #252a34; outline-offset: 1px; }
+.roles { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.role-card { border-radius: 12px; padding: 16px; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.role-card h3 { margin: 0 0 10px; }
+.role { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 0.875rem; }
+.role .chip { width: 34px; height: 24px; border-radius: 6px; border: 1px solid var(--border-strong); }
+.role code { font-size: 0.75rem; color: var(--text-secondary); }
+.ratio { font-weight: 700; font-size: 0.75rem; }
+.type-sample { background: #fbfbfc; border: 1px solid #dfe2e8; border-radius: 12px; padding: 8px 20px; }
+.type-row { display: grid; grid-template-columns: 170px 1fr; gap: 16px; align-items: baseline; padding: 10px 0; border-top: 1px solid #eceef2; }
+.type-row:first-child { border-top: 0; }
+.type-row code { font-size: 0.75rem; color: #555c68; }
+.ratio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+.ratio-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: #fbfbfc; border: 1px solid #dfe2e8; font-size: 0.8rem; }
+.ratio-item .demo { flex: none; width: 64px; height: 40px; border-radius: 6px; display: grid; place-items: center; font-weight: 700; }
+
+/* brand on dark header/footer + logo mark text follow the primary color */
+.app .brand-mark { color: var(--text-on-accent); }
+.app .brand .one { color: var(--brand-on-dark, var(--accent)); }
+.app .app-header { border-bottom-color: var(--brand-on-dark, var(--accent)); }
+.app .app-footer { border-top-color: var(--brand-on-dark, var(--accent)); }
+.app .app-footer a { color: var(--brand-on-dark, var(--indigo-300)); }
+
+/* primary switcher */
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 16px; align-items: center; }
+.switcher span { font-weight: 600; font-size: 0.875rem; margin-right: 4px; }
+.switcher button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid #c5cad3; background: #fbfbfc; font: 600 0.875rem var(--font-ui); cursor: pointer; color: #252a34; }
+.switcher button i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.switcher button[aria-pressed="true"] { border-color: #252a34; box-shadow: inset 0 0 0 1px #252a34; background: #fff; }
+.alt .pick { margin: 0 16px 14px; }
+
+/* color alternatives */
+.alt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.alt { background: #fbfbfc; border: 1px solid #dfe2e8; border-radius: 14px; overflow: hidden; display: grid; align-content: start; }
+.alt.current { opacity: 0.8; }
+.alt-head { padding: 14px 16px 10px; }
+.alt-head h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+.alt-head h3 .dot { width: 16px; height: 16px; border-radius: 50%; }
+.alt-head p { margin: 4px 0 0; font-size: 0.875rem; color: #555c68; min-height: 3em; }
+.alt-scale { display: grid; grid-template-columns: repeat(10, 1fr); height: 26px; margin: 0 16px; border-radius: 6px; overflow: hidden; }
+.alt-scale span.base { box-shadow: inset 0 0 0 2px #252a34; }
+.alt-checks { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px 14px; font-size: 0.75rem; }
+.alt-checks span { padding: 2px 8px; border-radius: 999px; background: #eceef2; }
+.alt-checks b.ok { color: #1d7a46; } .alt-checks b.bad { color: #c42b2b; }
+.alt-preview { display: grid; grid-template-columns: 1fr; }
+.alt-preview .app { padding: 12px; display: grid; gap: 10px; align-content: start; }
+.mini-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; background: var(--surface-inverse); color: var(--text-inverse); font-weight: 700; font-size: 0.875rem; border-bottom: 2px solid var(--accent-2, var(--accent)); }
+.mini-head .brand-mark { width: 22px; height: 22px; font-size: 0.75rem; border-radius: 6px; }
+.mini-head .avatar { width: 22px; height: 22px; margin-left: auto; font-size: 0.7rem; }
+.mini-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.mini-week .day { padding: 2px 4px; font-size: 0.68rem; border-radius: 5px; }
+.mini-week .day .status { right: 2px; bottom: 1px; }
+.mini-week .day .status svg { width: 10px; height: 10px; }
+.mini-week .day.posted .num { margin: 2px; padding: 0 4px; line-height: 14px; font-size: 0.6rem; }
+.mini-week .day.today .add svg { width: 12px; height: 12px; }
+.mini-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini-row .btn { min-height: 30px; padding: 0 10px; font-size: 0.75rem; }
+.mini-row .btn svg { width: 14px; height: 14px; }
+.mini-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; background: var(--missed-bg); color: var(--missed); font-size: 0.72rem; font-weight: 600; }
+.alt-mood { padding: 12px 16px 16px; font-size: 0.875rem; border-top: 1px solid #dfe2e8; }
+.alt-mood ul { margin: 0; padding-left: 18px; color: #555c68; }
+.alt-mood ul li.con { color: #8a4b00; }
+.mini-progress { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--text-secondary); }
+.mini-progress .bar { flex: 1; width: auto; height: 6px; }
+.mini-progress .bar span { background: var(--accent-2, var(--accent)); }
+.mini-link { font-size: 0.75rem; color: var(--accent-text); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+/* =====================================================================
+   3. APP COMPONENTS (proposal) - written only against the semantic roles
+   ===================================================================== */
+.app { container-type: inline-size; background: var(--bg); color: var(--text); font: var(--text-md)/1.5 var(--font-ui); }
+.app button, .app input, .app textarea { font-family: inherit; line-height: inherit; }
+.app :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Buttons - one primary per view, everything else secondary/ghost */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid transparent; font-weight: 600; font-size: var(--text-sm); cursor: pointer; transition: background-color var(--motion), border-color var(--motion); text-decoration: none; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: var(--text-on-accent); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.btn-secondary:hover { background: var(--surface-sunken); }
+.btn-ghost { background: transparent; color: var(--text); }
+.btn-ghost:hover { background: var(--surface-sunken); }
+.btn-danger { background: var(--danger); color: var(--gray-25); }
+.btn-danger-ghost { background: transparent; color: var(--danger); }
+.btn-danger-ghost:hover { background: var(--danger-bg); }
+.btn-icon { width: 40px; padding: 0; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* Header */
+.app-header { position: sticky; top: 0; z-index: 10; background: var(--surface-inverse); color: var(--text-inverse); border-bottom: 3px solid var(--accent); }
+.app-header .inner { max-width: 1120px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-weight: 700; font-size: var(--text-lg); letter-spacing: -0.01em; }
+.brand-mark { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--accent); color: var(--gray-950); font-weight: 700; }
+.brand .one { color: var(--accent); }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.app-header .btn-ghost { color: var(--text-inverse); }
+.app-header .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+.user-chip { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 999px; background: rgba(255,255,255,0.06); font-size: var(--text-sm); }
+.avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-pink); color: var(--gray-950); font-weight: 700; font-size: var(--text-sm); }
+
+/* Page layout: primary action (today) next to the calendar */
+.page { max-width: 1120px; margin: 0 auto; padding: var(--space-6) 24px var(--space-7); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-5); align-items: start; }
+.page-title { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.page-title h1 { margin: 0; font-size: var(--text-xl); line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+.page-title p { margin: 0; color: var(--text-secondary); font-size: var(--text-sm); }
+.side { display: grid; gap: var(--space-5); }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.card-head { display: flex; align-items: center; gap: 8px; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border); }
+.card-head h2 { margin: 0; font-size: var(--text-lg); line-height: 1.3; font-weight: 600; }
+.card-body { padding: var(--space-5); }
+
+/* Calendar */
+.month-nav { display: flex; align-items: center; gap: 4px; }
+.month-nav h2 { min-width: 9.5em; text-align: center; }
+.progress { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: var(--text-sm); color: var(--text-secondary); }
+.progress strong { color: var(--text); }
+.bar { width: 96px; height: 8px; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--border); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); }
+.weekdays { margin-bottom: var(--space-2); }
+.weekdays abbr { text-decoration: none; text-align: center; font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); }
+.day { position: relative; aspect-ratio: 1; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface-sunken); display: flex; align-items: flex-start; justify-content: flex-start; padding: 6px 8px; font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); overflow: hidden; }
+.day.blank { visibility: hidden; }
+button.day { cursor: pointer; text-align: left; transition: transform var(--motion), box-shadow var(--motion); }
+button.day:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.day .num { position: relative; z-index: 1; }
+.day.posted { border-color: transparent; color: var(--gray-25); padding: 0; }
+.day.posted .photo { position: absolute; inset: 0; }
+.day.posted .num { margin: 6px 8px; padding: 0 6px; border-radius: 999px; background: rgba(26,30,39,0.72); color: #fbfbfc; font-size: var(--text-xs); line-height: 20px; }
+.day.missed { background: var(--missed-bg); border-color: transparent; color: var(--missed); }
+.day .status { position: absolute; right: 7px; bottom: 6px; display: flex; align-items: center; gap: 3px; font-size: var(--text-xs); font-weight: 600; }
+.day .status svg { width: 14px; height: 14px; }
+.day.today { border: 2px dashed var(--focus); background: var(--surface); color: var(--accent-text); flex-direction: column; justify-content: space-between; }
+.day.today .add { display: flex; align-items: center; gap: 4px; font-size: var(--text-xs); }
+.day.future { background: transparent; border-style: dashed; color: var(--text-secondary); font-weight: 400; opacity: 0.8; }
+.app[data-theme="dark"] .day.future { border-color: var(--gray-700); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: var(--space-4) 0 0; padding: 0; list-style: none; font-size: var(--text-sm); color: var(--text-secondary); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 16px; border-radius: 4px; display: inline-block; border: 1px solid var(--border); }
+.legend .l-posted { background: linear-gradient(135deg, #6a8caf, #f4b183); border: 0; }
+.legend .l-missed { background: var(--missed-bg); border-color: var(--missed); }
+.legend .l-today { border: 2px dashed var(--focus); }
+.legend .l-future { border-style: dashed; }
+
+/* Placeholder "photos" */
+.ph1 { background: linear-gradient(160deg, #2b5876 0%, #4e4376 100%); }
+.ph2 { background: linear-gradient(160deg, #f4b183 0%, #c06c84 60%, #6c5b7b 100%); }
+.ph3 { background: linear-gradient(170deg, #a8c66c 0%, #4f772d 100%); }
+.ph4 { background: linear-gradient(160deg, #fceabb 0%, #f8b500 100%); }
+.ph5 { background: linear-gradient(180deg, #89c4f4 0%, #e0eafc 55%, #6b8e4e 56%, #3e5c2b 100%); }
+.ph6 { background: linear-gradient(160deg, #0f2027, #203a43, #2c5364); }
+.photo { background-size: cover; }
+
+/* Today card (primary action) */
+.today-card .card-body { display: grid; gap: var(--space-4); }
+.eyebrow { margin: 0; font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); }
+.today-card h2 { font-size: var(--text-lg); }
+.today-card p { margin: 0; color: var(--text-secondary); font-size: var(--text-sm); }
+.drop { display: grid; place-items: center; gap: 8px; text-align: center; padding: var(--space-5) var(--space-4); border: 2px dashed var(--border-strong); border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--text-secondary); font-size: var(--text-sm); }
+.drop svg { width: 32px; height: 32px; color: var(--accent-text); }
+.drop strong { color: var(--text); font-size: var(--text-md); }
+.today-photo { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius-md); overflow: hidden; }
+.posted-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; background: var(--success-bg); color: var(--success); font-size: var(--text-sm); font-weight: 600; }
+.posted-badge svg { width: 16px; height: 16px; }
+.row { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.hint { font-size: var(--text-xs) !important; }
+
+/* Guestbook */
+.field { display: grid; gap: 6px; }
+.field label { font-size: var(--text-sm); font-weight: 600; }
+.field .help { font-size: var(--text-xs); color: var(--text-secondary); }
+.input, .textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); line-height: 1.5; }
+.textarea { min-height: 84px; resize: vertical; }
+.input::placeholder, .textarea::placeholder { color: var(--text-secondary); }
+.input.error { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.entries { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.entry { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--surface-sunken); border: 1px solid var(--border); }
+.entry p { margin: 0; }
+.meta { font-size: var(--text-xs); color: var(--text-secondary); }
+
+/* Footer */
+.app-footer { background: var(--surface-inverse); color: var(--text-inverse); border-top: 3px solid var(--accent); font-size: var(--text-sm); }
+.app-footer .inner { max-width: 1120px; margin: 0 auto; padding: var(--space-6) 24px; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: var(--space-5); }
+.app-footer h3 { margin: 0 0 8px; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); }
+.app-footer address { font-style: normal; }
+.app-footer a { color: var(--indigo-300); text-decoration: underline; text-underline-offset: 3px; }
+.app-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.app-footer .bottom { border-top: 1px solid rgba(255,255,255,0.1); text-align: center; padding: 12px; color: var(--gray-400); font-size: var(--text-xs); }
+
+/* Modal */
+.modal-stage { position: relative; height: 640px; background: var(--overlay); display: grid; place-items: center; padding: 24px; }
+.modal-stage::before { content: ""; position: absolute; inset: 0; z-index: -1; }
+.modal { width: min(880px, 100%); height: 560px; background: var(--surface); color: var(--text); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr); grid-template-rows: auto 1fr; overflow: hidden; }
+.modal-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5); border-bottom: 1px solid var(--border); }
+.modal-head h2 { margin: 0; font-size: var(--text-lg); font-weight: 600; }
+.modal-head .meta { margin-left: 4px; }
+.modal-head .btn:last-child { margin-left: auto; }
+.modal-photo { position: relative; background: var(--gray-950); display: grid; place-items: center; }
+.modal-photo .photo { width: 78%; aspect-ratio: 3 / 4; border-radius: 6px; }
+.zoom-hint { position: absolute; left: 12px; bottom: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(26,30,39,0.75); color: #e6e8ec; font-size: var(--text-xs); }
+.comments { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
+.comments h3 { margin: 0; padding: var(--space-4) var(--space-5) var(--space-2); font-size: var(--text-md); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.count { min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--border); font-size: var(--text-xs); text-align: center; color: var(--text-secondary); }
+.comment-list { list-style: none; margin: 0; padding: 0 var(--space-5); overflow: auto; display: grid; gap: var(--space-4); align-content: start; }
+.comment { display: grid; grid-template-columns: 32px 1fr; gap: 10px; }
+.comment .avatar { width: 32px; height: 32px; }
+.comment .who { display: flex; gap: 8px; align-items: baseline; font-size: var(--text-sm); }
+.comment .who b { font-weight: 600; }
+.comment p { margin: 2px 0 0; }
+.composer { padding: var(--space-3) var(--space-5) var(--space-4); border-top: 1px solid var(--border); display: grid; gap: 6px; }
+.composer-bar { display: flex; align-items: flex-end; gap: 6px; padding: 6px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); }
+.composer-bar:focus-within { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+.composer-bar textarea { flex: 1; border: 0; outline: 0; resize: none; background: transparent; padding: 8px 4px; min-height: 40px; }
+.composer .meta { display: flex; justify-content: space-between; }
+
+/* Login */
+.auth { min-height: 560px; display: grid; place-items: center; padding: var(--space-6) 24px; }
+.auth .card { width: min(400px, 100%); }
+.auth form { display: grid; gap: var(--space-4); }
+.auth h1 { margin: 0 0 4px; font-size: var(--text-xl); font-weight: 600; letter-spacing: -0.01em; }
+.auth .sub { margin: 0 0 var(--space-5); color: var(--text-secondary); }
+.auth .btn-primary { width: 100%; min-height: 44px; font-size: var(--text-md); }
+.divider { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: var(--text-xs); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.alert { display: flex; gap: 10px; align-items: flex-start; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--danger-bg); color: var(--danger); font-size: var(--text-sm); }
+.alert svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.alert b { display: block; }
+.alert.success { background: var(--success-bg); color: var(--success); }
+.text-link { color: var(--accent-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* States */
+.state-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.state-grid .app { border-radius: 14px; padding: 20px; border: 1px solid #c5cad3; }
+.state-grid h3 { margin: 0 0 10px; font-size: var(--text-sm); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.skeleton { border-radius: var(--radius-md); background: linear-gradient(90deg, var(--surface-sunken), var(--border), var(--surface-sunken)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } button.day:hover { transform: none; } }
+.dialog { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: var(--space-5); display: grid; gap: var(--space-3); border: 1px solid var(--border); }
+.dialog h4 { margin: 0; font-size: var(--text-lg); font-weight: 600; }
+.dialog p { margin: 0; color: var(--text-secondary); }
+.dialog .row { justify-content: flex-end; margin-top: var(--space-2); }
+.toast { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; border-radius: var(--radius-md); background: var(--gray-900); color: #e6e8ec; box-shadow: var(--shadow); font-size: var(--text-sm); }
+.toast svg { width: 18px; height: 18px; color: var(--indigo-300); flex: none; }
+.toast .btn { margin-left: auto; color: var(--indigo-300); min-height: 32px; }
+.empty { display: grid; justify-items: center; text-align: center; gap: 8px; padding: var(--space-5); color: var(--text-secondary); }
+.empty svg { width: 36px; height: 36px; color: var(--accent-text); }
+.empty strong { color: var(--text); }
+
+/* Responsive (container queries - the same markup is used in the phone frames) */
+@container (max-width: 860px) {
+  .page { grid-template-columns: 1fr; }
+  .side { display: contents; }
+  .today-card { order: -1; }
+  .page-title { order: -2; }
+}
+@container (max-width: 600px) {
+  .app-header .inner { padding: 8px 16px; gap: 8px; }
+  .user-chip .email, .hide-sm { display: none; }
+  .page { padding: var(--space-4) 16px var(--space-6); gap: var(--space-4); }
+  .card-head, .card-body { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .cal-head { flex-wrap: wrap; }
+  .progress { margin-left: 0; width: 100%; }
+  .progress .bar { flex: 1; }
+  .month-nav { width: 100%; justify-content: space-between; }
+  .month-nav h2 { min-width: 0; }
+  .grid, .weekdays { gap: 4px; }
+  .day { padding: 4px 5px; font-size: var(--text-xs); border-radius: 8px; }
+  .day .status span, .day.today .add span { display: none; }
+  .day .status { right: 4px; bottom: 3px; }
+  .day.posted .num { margin: 3px; padding: 0 5px; line-height: 18px; }
+  .legend { gap: 8px 14px; }
+  .app-footer .inner { grid-template-columns: 1fr 1fr; padding: var(--space-5) 16px; }
+  .modal { grid-template-columns: 1fr; grid-template-rows: auto 220px 1fr; height: 100%; border-radius: 0; }
+  .modal-stage { padding: 0; height: 760px; }
+  .modal-photo .photo { width: auto; height: 90%; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+  <header>
+    <h1>JustOne – Redesign-Mockups</h1>
+    <p>Die beiden Recherchen (UI/UX-Grundlagen sowie Farben &amp; Typografie) auf JustOne angewendet. Erst Befund, dann Design-Tokens, dann die Screens. Alles hier ist statisch – es wird noch nichts in der App umgebaut. <b>Farben:</b> Indigo (Hauptfarbe) + Pink (Zweitfarbe), entschieden in 2d.</p>
+    <ul class="toc">
+      <li><a href="#befunde">1 · Befunde</a></li>
+      <li><a href="#tokens">2 · Farben &amp; Typo</a></li>
+      <li><a href="#alternativen">2b · Pink ersetzen</a></li>
+      <li><a href="#pink-primary">2c · Pink als Hauptfarbe</a></li>
+      <li><a href="#primary">2d · Neue Hauptfarbe + Pink</a></li>
+      <li><a href="#kalender">3 · Kalender (Desktop)</a></li>
+      <li><a href="#mobil">4 · Mobil</a></li>
+      <li><a href="#dark">5 · Dark Mode</a></li>
+      <li><a href="#modal">6 · Foto &amp; Kommentare</a></li>
+      <li><a href="#login">7 · Login</a></li>
+      <li><a href="#zustaende">8 · Zustände</a></li>
+    </ul>
+  </header>
+
+  <!-- ================================================================ -->
+  <section id="befunde">
+    <h2>1 · Befunde im aktuellen Stand</h2>
+    <p>Geprüft gegen die Checklisten beider Dokumente (WCAG-Kontrast nachgerechnet, Nielsen-Heuristiken, häufige UX-Fehler).</p>
+    <table class="audit">
+      <thead><tr><th>Bereich</th><th>Problem heute</th><th>Regel</th><th>Lösung im Mockup</th></tr></thead>
+      <tbody>
+        <tr><td>Kontrast</td><td>Pink <code>#ff2e63</code> als Text auf Hellgrau = <b>3,0 : 1</b> (Links, Fehler, „Log out“); helle Schrift auf pinken Buttons ebenfalls 3,0 : 1; Grau <code>#6b6f76</code> auf Hellgrau 4,2 : 1. Fokusring Cyan auf Hellgrau nur 1,5 : 1.</td><td><span class="tag fail">WCAG AA</span> 4,5 : 1 Text, 3 : 1 UI</td><td>Farbskalen 50–900; Text-Pink = <code>pink-700 #c2103f</code> (5,3 : 1), Links = <code>indigo-700</code> (7,6 : 1), Fokus = <code>indigo-600</code> (5,0 : 1).</td></tr>
+        <tr><td>60-30-10</td><td>Pinke Kacheln, pinke Versatzschatten, Cyan-Footer und Cyan-Kopf: Akzentfarben nehmen weit mehr als 10 % ein; der Blick findet keinen Ankerpunkt.</td><td><span class="tag warn">Farbrollen</span> wenige Akzente, gezielt</td><td>Neutrale Flächen (60/30), Indigo nur für Hauptaktion &amp; Marke, Pink nur für „verpasst“ und Avatar, eigenes Rot für Fehler.</td></tr>
+        <tr><td>Farbe als einziges Signal</td><td>„Verpasst“ vs. „heute offen“ vs. „Zukunft“ unterscheiden sich vor allem über Farbe; keine Legende.</td><td><span class="tag fail">WCAG 1.4.1</span></td><td>Jeder Status hat Icon + Text (✕ missed, + Add photo) und eine Legende.</td></tr>
+        <tr><td>Kalender</td><td>Keine Wochentage, der Monat beginnt immer links oben – wirkt nicht wie ein echter Kalender. Monatsname in Versalien.</td><td><span class="tag warn">Reale Welt</span> Nielsen #2</td><td>Mo–So-Kopfzeile, korrekter Versatz, „November 2026“ in normaler Schreibweise.</td></tr>
+        <tr><td>Hauptaktion</td><td>„Post today“ liegt unter dem Kalender – auf dem Laptop erst nach Scrollen sichtbar.</td><td><span class="tag warn">Hierarchie</span></td><td>„Today“-Karte rechts neben dem Kalender (mobil ganz oben); die Heute-Kachel öffnet ebenfalls den Upload.</td></tr>
+        <tr><td>Nähe</td><td>Monatsnavigation schwebt über der Karte, getrennt vom Monatsnamen.</td><td><span class="tag warn">Nähe</span></td><td>‹ November 2026 › direkt im Kartenkopf, dazu Fortschritt „4 of 8 days“.</td></tr>
+        <tr><td>Tastatur</td><td>Kalenderkacheln sind <code>&lt;div&gt;</code> mit Klick – per Tastatur nicht erreichbar; Modal ohne Fokusfalle.</td><td><span class="tag fail">Bedienbarkeit</span></td><td>Kacheln als <code>&lt;button&gt;</code> mit Label („Photo from 5 November“), Modal mit Titel &amp; Fokusführung.</td></tr>
+        <tr><td>Formulare</td><td>Login/Registrierung nur mit Platzhaltern, keine Labels; Demo-Zugang ist vorausgefüllt; Gästebuch-Feld ohne Label.</td><td><span class="tag fail">WCAG 3.3.2</span></td><td>Sichtbare Labels, Hilfetext, Fehler mit Lösung; Demo-Login als eigener Button.</td></tr>
+        <tr><td>Fehlervermeidung</td><td>„Delete photo“ löscht sofort ohne Rückfrage.</td><td><span class="tag fail">Nielsen #3/#5</span></td><td>Bestätigungsdialog; Erfolg als Toast.</td></tr>
+        <tr><td>Zwischenzustände</td><td>Beim Laden verschwindet der ganze Kalender („Loading calendar...“); Fehler ohne „Erneut versuchen“; nach dem Posten kein Feedback.</td><td><span class="tag warn">Feedback</span> Nielsen #1/#9</td><td>Skeleton, Fehler mit Retry, Erfolgs-Toast, gestaltete Leerzustände.</td></tr>
+        <tr><td>Typografie</td><td>Buttons erben die Schrift nicht (Arial statt System-UI); Größen bis 0,7 rem (11 px); Gewichte 800/900.</td><td><span class="tag warn">Eine Schrift</span> ≥ 12 px</td><td>Eine Systemschrift überall, Skala 12/14/16/20/24/32 px in rem, Titel Semibold (600).</td></tr>
+        <tr><td>Konsistenz</td><td>Dateiauswahl zeigt Browser-Deutsch („Datei auswählen“) in einer englischen Oberfläche; Kommentare sind dunkel, Rest hell.</td><td><span class="tag warn">Konsistenz</span> Nielsen #4</td><td>Eigene Dropzone; Modal folgt dem Theme.</td></tr>
+        <tr><td>Bewegung</td><td>„Today“-Rahmen pulsiert dauerhaft; viele Hover-Effekte (Kippen, Drehen, Verschieben).</td><td><span class="tag warn">Ruhige UI</span> &lt; 300 ms</td><td>Keine Endlos-Animation, kurze Übergänge, <code>prefers-reduced-motion</code>.</td></tr>
+        <tr><td>Dark Mode</td><td>Nicht vorhanden.</td><td><span class="tag warn">Eigene Palette</span></td><td>Eigenes Dark-Set (heller = erhöht), folgt dem System; Umschalter im Header.</td></tr>
+        <tr><td>Links</td><td>Footer-Links „Imprint/Privacy/Terms“ zeigen auf <code>#</code>.</td><td><span class="tag warn">Irreführende Links</span></td><td>Echte (Platzhalter-)Seiten oder als Text ohne Link.</td></tr>
+        <tr><td>Was bleibt</td><td>Markenfarben, klare Ein-Foto-Idee, sticky Header, Kommentar-Composer, Bild-Layout nach Format.</td><td><span class="tag ok">beibehalten</span></td><td>Werden übernommen und nur angepasst.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="tokens">
+    <h2>2 · Farben &amp; Typografie</h2>
+    <p style="max-width: 80ch; margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: #e9f7ef; color: #1d7a46"><b>Entschieden:</b>&nbsp;Indigo ist die Hauptfarbe, Pink die Zweitfarbe (siehe 2d). Cyan entfällt.</p>
+    <p>Die Markenfarben – sie werden zu festen Skalen (Refactoring UI: 100–900, vorab definiert statt <code>lighten()</code>) und bekommen <b>Rollen</b>. Komponenten nutzen nur noch Rollen, damit Hell/Dunkel automatisch passt.</p>
+
+    <h3>Skalen (Markenwert umrandet)</h3>
+    <div id="scales"></div>
+
+    <h3>Rollen – Hell und Dunkel</h3>
+    <div class="roles">
+      <div class="role-card tokens-light" id="roles-light"><h3>Light</h3></div>
+      <div class="role-card tokens-dark" id="roles-dark"><h3>Dark</h3></div>
+    </div>
+    <p class="note">Kontrastwerte gegen die Fläche, auf der die Farbe tatsächlich steht. Dunkler Modus: kein Reinweiß (Text <code>#e6e8ec</code>), erhöhte Ebenen werden heller (Karte <code>gray-900</code> auf Grund <code>gray-950</code>).</p>
+
+    <h3>Kontrast: vorher → nachher</h3>
+    <div class="ratio-grid" id="ratios"></div>
+
+    <h3>Typografie: eine Systemschrift, eine Skala</h3>
+    <div class="type-sample">
+      <div class="type-row"><code>2xl · 32px · 600 · 1.2</code><span style="font: 600 2rem/1.2 var(--font-ui); letter-spacing: -0.02em">One photo per day</span></div>
+      <div class="type-row"><code>xl · 24px · 600 · 1.25</code><span style="font: 600 1.5rem/1.25 var(--font-ui); letter-spacing: -0.01em">Your November</span></div>
+      <div class="type-row"><code>lg · 20px · 600 · 1.3</code><span style="font: 600 1.25rem/1.3 var(--font-ui)">November 2026</span></div>
+      <div class="type-row"><code>md · 16px · 400 · 1.5</code><span>Body text and comments – at least 16 px, line height 1.5, max. ~70 characters per line.</span></div>
+      <div class="type-row"><code>sm · 14px · 600</code><span style="font-size: .875rem; font-weight: 600">Labels, buttons, meta information</span></div>
+      <div class="type-row"><code>xs · 12px · 400</code><span style="font-size: .75rem; color: #555c68">Captions only (date, hint) – never smaller</span></div>
+    </div>
+    <p class="note"><b>Schrift:</b> <code>system-ui</code>-Stack (Segoe UI Variable auf Windows, SF Pro auf Apple, Roboto auf Android) – lädt nichts, wirkt nativ; Buttons und Felder erben sie. Keine Gewichte unter 400 oder über 700, Titel Semibold. Alles in <code>rem</code>, damit Browser-Zoom greift.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="alternativen">
+    <h2>2b · Pink ersetzen – Vorschläge</h2>
+    <p>Cyan bleibt die Marke. Die zweite Farbe ersetzt Pink überall dort, wo es Markencharakter hat (Avatar, „verpasst“, Akzente). Fehler und Löschen bekommen unabhängig davon ein neutrales Rot – so bleibt die Bedeutung klar, egal welche Farbe du wählst.</p>
+    <div class="alt-grid" id="alts"></div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="pink-primary">
+    <h2>2c · Pink behalten – Cyan ersetzen</h2>
+    <p>Umgekehrt gedacht: Pink wird die Hauptfarbe (Logo, Primär-Button), eine neue Partnerfarbe übernimmt, was bisher Cyan war (Header-Linie, „Today“, Fokus, Fortschritt, Links, Avatar, „verpasst“). Pink-500 ist für weiße Schrift zu hell (3,5 : 1) – Buttons nutzen deshalb Pink-600 (hell) bzw. Pink-400 mit dunkler Schrift (dunkel).</p>
+    <div class="alt-grid" id="pink-alts"></div>
+    <p class="note"><b>Ehrlich gesagt:</b> Die TikTok-Ähnlichkeit kommt vor allem vom <i>Paar</i> Cyan + Pink. Pink allein ist weit verbreitet (u. a. Tinder, Foodora), wirkt aber laut und nah am Rot für Fehler/Löschen – Löschen braucht deshalb immer Icon, Text und Bestätigung.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="primary">
+    <h2>2d · Cyan ersetzen – Pink bleibt Zweitfarbe</h2>
+    <p><b>Entschieden: Indigo.</b> Die Rollen bleiben wie im Redesign: Die <b>Hauptfarbe</b> trägt Logo, Primär-Button, Header-Linie, „Today“, Fokus, Fortschritt und Links. <b>Pink</b> bleibt Zweitfarbe für verpasste Tage, Avatar und kleine Akzente. Nur Cyan wird ausgetauscht – damit verschwindet das TikTok-Paar.</p>
+    <div class="alt-grid" id="primary-alts" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))"></div>
+    <div class="switcher" id="primary-switch" role="group" aria-label="Hauptfarbe für die Vorschau"><span>Vorschau mit:</span></div>
+    <div class="frame-row">
+      <div class="frame" style="flex: 1 1 100%">
+        <div class="frame-bar"><i></i><i></i><i></i><span id="primary-label">Light</span></div>
+        <div class="app primary-preview" data-mount="calendar" data-today-state="open"></div>
+      </div>
+      <div>
+        <div class="phone"><div class="app primary-preview" data-theme="dark" data-mount="calendar" data-today-state="posted"></div></div>
+        <p class="caption">Mobil · Dark Mode</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="kalender">
+    <h2>3 · Kalender – Desktop, Light</h2>
+    <p>Neue Hierarchie: links der Monat, rechts die eine Aufgabe des Tages. Pink nur noch für verpasste Tage; Indigo für die Hauptaktion.</p>
+    <div class="frame rel">
+      <div class="frame-bar"><i></i><i></i><i></i><span>localhost:5173</span></div>
+      <div class="app" data-mount="calendar" data-today-state="open"></div>
+      <span class="pin" data-target=".header-actions">1</span>
+      <span class="pin" data-target=".page-title h1">2</span>
+      <span class="pin" data-target=".month-nav">3</span>
+      <span class="pin" data-target=".weekdays">4</span>
+      <span class="pin" data-target=".today-card">5</span>
+      <span class="pin" data-target=".app-footer .inner">6</span>
+    </div>
+    <ol class="pins">
+      <li><b>Header</b> bleibt sticky; neu: Theme-Umschalter (System/Hell/Dunkel), User-Chip, „Log out“ mit Text statt Icon.</li>
+      <li><b>Seitentitel</b> mit Status („You haven’t posted today yet“ / „Done for today ✓“) – der Nutzer weiß sofort, wo er steht.</li>
+      <li><b>Monatsnavigation</b> direkt am Monatsnamen, „Today“ springt zurück; Fortschrittsbalken statt Zahl allein.</li>
+      <li><b>Echter Kalender:</b> Wochentage Mo–So, Versatz, Status mit Icon + Text; Legende darunter.</li>
+      <li><b>Today-Karte</b> = einzige Primäraktion: Dropzone mit Formaten &amp; Limit; die Heute-Kachel führt ebenfalls hierher.</li>
+      <li><b>Footer</b> dunkel wie der Header (Konsistenz, Indigo nur als Linie) – die große Cyan-Fläche entfällt.</li>
+    </ol>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="mobil">
+    <h2>4 · Mobil (390 px)</h2>
+    <p>Gleiche Komponenten, eine Spalte. Reihenfolge nach Wichtigkeit: Today → Kalender → Gästebuch. Touch-Ziele mindestens 40 px.</p>
+    <div class="frame-row">
+      <div>
+        <div class="phone"><div class="app" data-mount="calendar" data-today-state="open"></div></div>
+        <p class="caption">Heute noch offen</p>
+      </div>
+      <div>
+        <div class="phone"><div class="app" data-mount="calendar" data-today-state="posted" data-scroll="0"></div></div>
+        <p class="caption">Heute gepostet</p>
+      </div>
+      <div>
+        <div class="phone"><div class="app" data-mount="modal"></div></div>
+        <p class="caption">Foto &amp; Kommentare (Vollbild)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="dark">
+    <h2>5 · Dark Mode</h2>
+    <p>Eigene Palette statt Invertierung: dunkler Grund, Karten heller, Text gedämpftes Weiß. Pink-300 für „verpasst“ (6,2 : 1), Indigo-400/300 für Buttons und Links.</p>
+    <div class="frame">
+      <div class="frame-bar"><i></i><i></i><i></i><span>localhost:5173 · prefers-color-scheme: dark</span></div>
+      <div class="app" data-theme="dark" data-mount="calendar" data-today-state="posted"></div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="modal">
+    <h2>6 · Foto &amp; Kommentare</h2>
+    <p>Das Modal folgt jetzt dem Theme (vorher immer dunkel), hat einen Titel (Datum) und eine beschriftete Schließen-Schaltfläche. Kommentare mit Avatar; Composer wie bisher (wächst mit, Enter sendet).</p>
+    <div class="frame-row">
+      <div class="frame" style="flex: 1 1 640px">
+        <div class="frame-bar"><i></i><i></i><i></i><span>Light</span></div>
+        <div class="app" data-mount="modal"></div>
+      </div>
+      <div class="frame" style="flex: 1 1 640px">
+        <div class="frame-bar"><i></i><i></i><i></i><span>Dark</span></div>
+        <div class="app" data-theme="dark" data-mount="modal"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="login">
+    <h2>7 · Login &amp; Registrierung</h2>
+    <p>Sichtbare Labels, Hilfetexte, Fehler mit Ursache und Lösung. Der Demo-Zugang ist ein eigener Button statt vorausgefüllter Felder.</p>
+    <div class="frame-row">
+      <div class="frame" style="flex: 1 1 520px">
+        <div class="frame-bar"><i></i><i></i><i></i><span>Login</span></div>
+        <div class="app" data-mount="login"></div>
+      </div>
+      <div class="frame" style="flex: 1 1 520px">
+        <div class="frame-bar"><i></i><i></i><i></i><span>Registrierung mit Fehler</span></div>
+        <div class="app" data-mount="register"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="zustaende">
+    <h2>8 · Zwischenzustände</h2>
+    <p>Bisher fehlten sie oder waren nur Text. Jeder Zustand sagt, was passiert, und bietet einen Ausweg.</p>
+    <div class="state-grid" id="states"></div>
+  </section>
+</div>
+
+<!-- =====================================================================
+     TEMPLATES (static mockup data)
+     ===================================================================== -->
+<script>
+const icons = {
+  prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>',
+  theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>'
+}
+
+const header = () => `
+  <header class="app-header"><div class="inner">
+    <a class="brand" href="#"><span class="brand-mark">1</span><span>Just<span class="one">One</span></span></a>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" aria-label="Theme: system">${icons.theme}</button>
+      <span class="user-chip"><span class="avatar">A</span><span class="email">anna@justone.com</span></span>
+      <button class="btn btn-ghost">${icons.logout}<span class="hide-sm">Log out</span></button>
+    </div>
+  </div></header>`
+
+const footer = () => `
+  <footer class="app-footer">
+    <div class="inner">
+      <div><a class="brand" href="#" style="color: inherit; text-decoration: none"><span class="brand-mark">1</span><span>Just<span class="one">One</span></span></a><p style="margin: 8px 0 0; color: var(--gray-400)">One photo per day. Nothing more.</p></div>
+      <div><h3>Company</h3><address>JustOne GmbH<br>Beispielstraße 42<br>10115 Berlin</address></div>
+      <div><h3>Contact</h3><ul><li><a href="#">hello@justone.example</a></li><li><a href="#">+49 30 1234 5678</a></li></ul></div>
+      <div><h3>Legal</h3><ul><li><a href="#">Imprint</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+    </div>
+    <div class="bottom">© 2026 JustOne GmbH · Berlin</div>
+  </footer>`
+
+// November 2026: the 1st is a Sunday -> 6 blank cells (week starts Monday). Today = 8th.
+const posted = { 2: 'ph1', 3: 'ph2', 5: 'ph3', 7: 'ph5' }
+function calendarGrid(todayState) {
+  let cells = '<div class="day blank"></div>'.repeat(6)
+  for (let d = 1; d <= 30; d++) {
+    if (d === 8 && todayState === 'posted') {
+      cells += `<button class="day posted" aria-label="Your photo for today, 8 November"><span class="photo ph4"></span><span class="num">${d}</span></button>`
+    } else if (d === 8) {
+      cells += `<button class="day today" aria-label="Today, 8 November – add photo"><span class="num">${d}</span><span class="add">${icons.plus}<span>Add photo</span></span></button>`
+    } else if (posted[d]) {
+      cells += `<button class="day posted" aria-label="Photo from ${d} November"><span class="photo ${posted[d]}"></span><span class="num">${d}</span></button>`
+    } else if (d < 8) {
+      cells += `<div class="day missed" aria-label="${d} November – missed"><span class="num">${d}</span><span class="status">${icons.x}<span>missed</span></span></div>`
+    } else {
+      cells += `<div class="day future" aria-label="${d} November"><span class="num">${d}</span></div>`
+    }
+  }
+  return cells
+}
+
+const calendarCard = (todayState) => {
+  const count = todayState === 'posted' ? 5 : 4
+  return `
+  <section class="card" aria-labelledby="cal-title">
+    <div class="card-head cal-head">
+      <div class="month-nav">
+        <button class="btn btn-ghost btn-icon" aria-label="Previous month">${icons.prev}</button>
+        <h2 id="cal-title">November 2026</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Next month" disabled>${icons.next}</button>
+        <button class="btn btn-secondary hide-sm" style="min-height: 32px; margin-left: 6px" disabled>Today</button>
+      </div>
+      <div class="progress"><span><strong>${count}</strong> of 8 days posted</span><span class="bar" role="img" aria-label="${count} of 8"><span style="width: ${count / 8 * 100}%"></span></span></div>
+    </div>
+    <div class="card-body">
+      <div class="weekdays">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<abbr title="${d}">${d}</abbr>`).join('')}</div>
+      <div class="grid">${calendarGrid(todayState)}</div>
+      <ul class="legend">
+        <li><i class="l-posted"></i>Posted</li>
+        <li><i class="l-missed"></i>Missed</li>
+        <li><i class="l-today"></i>Today</li>
+        <li><i class="l-future"></i>Upcoming</li>
+      </ul>
+    </div>
+  </section>`
+}
+
+const todayCard = (state) => state === 'posted' ? `
+  <section class="card today-card" aria-labelledby="today-title">
+    <div class="card-body">
+      <div class="row" style="justify-content: space-between"><p class="eyebrow">Sunday, 8 November</p><span class="posted-badge">${icons.check}Posted</span></div>
+      <h2 id="today-title" style="margin: 0">Today's photo</h2>
+      <div class="today-photo photo ph4"></div>
+      <div class="row">
+        <button class="btn btn-secondary">${icons.upload}Replace photo</button>
+        <button class="btn btn-danger-ghost">${icons.trash}Delete</button>
+      </div>
+      <p class="hint">See you tomorrow – the next photo can be posted from midnight (your time zone).</p>
+    </div>
+  </section>` : `
+  <section class="card today-card" aria-labelledby="today-title">
+    <div class="card-body">
+      <p class="eyebrow">Sunday, 8 November</p>
+      <h2 id="today-title" style="margin: -8px 0 0">What's your photo today?</h2>
+      <p>You can post exactly one photo per day.</p>
+      <div class="drop">${icons.upload}<strong>Drag a photo here</strong><span>or</span><button class="btn btn-primary">Choose photo</button><span class="hint">JPG, PNG, GIF or WebP · max. 10 MB</span></div>
+    </div>
+  </section>`
+
+const guestbook = () => `
+  <section class="card" aria-labelledby="gb-title">
+    <div class="card-head"><h2 id="gb-title">Guestbook</h2><span class="meta" style="margin-left: auto">Only visible to you</span></div>
+    <div class="card-body">
+      <form class="field" onsubmit="return false">
+        <label for="gb">New entry</label>
+        <textarea id="gb" class="textarea" placeholder="Write something…"></textarea>
+        <div class="row" style="justify-content: space-between"><span class="help">0 / 2000</span><button class="btn btn-secondary">Post entry</button></div>
+      </form>
+      <ul class="entries">
+        <li class="entry"><p>Already November!</p><span class="meta">1 Nov 2026, 17:26</span></li>
+        <li class="entry"><p>Weekend, finally.</p><span class="meta">26 Sep 2026, 22:29</span></li>
+      </ul>
+    </div>
+  </section>`
+
+const calendarPage = (todayState) => `
+  ${header()}
+  <main class="page">
+    <div class="page-title"><h1>Hi Anna</h1><p>${todayState === 'posted' ? 'Done for today ✓' : 'You haven’t posted today yet.'}</p></div>
+    ${calendarCard(todayState)}
+    <div class="side">
+      ${todayCard(todayState)}
+      ${guestbook()}
+    </div>
+  </main>
+  ${footer()}`
+
+const modalView = () => `
+  <div class="modal-stage">
+    <div class="modal" role="dialog" aria-labelledby="m-title">
+      <div class="modal-head">
+        <button class="btn btn-ghost btn-icon" aria-label="Previous photo">${icons.prev}</button>
+        <h2 id="m-title">Thursday, 5 November</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Next photo">${icons.next}</button>
+        <button class="btn btn-secondary" aria-label="Close">${icons.x}<span class="hide-sm">Close</span></button>
+      </div>
+      <div class="modal-photo"><div class="photo ph3"></div><span class="zoom-hint">Click to enlarge</span></div>
+      <div class="comments">
+        <h3>${icons.chat.replace('<svg', '<svg width="18" height="18"')}Comments <span class="count">2</span></h3>
+        <ul class="comment-list">
+          <li class="comment"><span class="avatar">A</span><div><div class="who"><b>anna@justone.com</b><span class="meta">5 Nov, 19:57</span></div><p>Spring in November? 🌱</p></div></li>
+          <li class="comment"><span class="avatar" style="background: var(--accent)">M</span><div><div class="who"><b>max@justone.com</b><span class="meta">6 Nov, 08:12</span></div><p>Love the light in this one.</p></div></li>
+        </ul>
+        <div class="composer">
+          <div class="composer-bar">
+            <button class="btn btn-ghost btn-icon" aria-label="Insert emoji">😊</button>
+            <textarea rows="1" aria-label="Comment" placeholder="Write a comment…"></textarea>
+            <button class="btn btn-primary" disabled>Send</button>
+          </div>
+          <div class="meta"><span>Enter to send · Shift+Enter for a new line</span><span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>`
+
+const loginView = () => `
+  ${header().replace(/<div class="header-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/, '<div class="header-actions"><button class="btn btn-ghost btn-icon" aria-label="Theme: system">' + icons.theme + '</button></div></div></header>')}
+  <main class="auth">
+    <section class="card"><div class="card-body">
+      <h1>Welcome back</h1>
+      <p class="sub">Log in to see your month.</p>
+      <form onsubmit="return false">
+        <div class="field"><label for="le">Email</label><input id="le" class="input" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label for="lp">Password</label><input id="lp" class="input" type="password" autocomplete="current-password"></div>
+        <button class="btn btn-primary">Log in</button>
+        <div class="divider">or</div>
+        <button class="btn btn-secondary" style="width: 100%">Try the demo account</button>
+        <p style="margin: 0; text-align: center; font-size: var(--text-sm)">New here? <a class="text-link" href="#">Create an account</a></p>
+      </form>
+    </div></section>
+  </main>`
+
+const registerView = () => `
+  ${header().replace(/<div class="header-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/, '<div class="header-actions"><button class="btn btn-ghost btn-icon" aria-label="Theme: system">' + icons.theme + '</button></div></div></header>')}
+  <main class="auth">
+    <section class="card"><div class="card-body">
+      <h1>Create account</h1>
+      <p class="sub">One photo per day. That’s it.</p>
+      <form onsubmit="return false">
+        <div class="row" style="flex-wrap: nowrap">
+          <div class="field" style="flex: 1"><label for="rf">First name</label><input id="rf" class="input" value="Anna"></div>
+          <div class="field" style="flex: 1"><label for="rl">Last name</label><input id="rl" class="input" value="Berg"></div>
+        </div>
+        <div class="field"><label for="re">Email</label><input id="re" class="input" value="anna@justone.com"></div>
+        <div class="field"><label for="rp">Password</label><input id="rp" class="input error" type="password" value="anna" aria-describedby="rp-err">
+          <div class="alert" id="rp-err">${icons.alert}<div><b>Password is too short.</b>Use at least 6 characters, including a digit and an uppercase letter.</div></div></div>
+        <button class="btn btn-primary">Create account</button>
+        <p style="margin: 0; text-align: center; font-size: var(--text-sm)">Already registered? <a class="text-link" href="#">Log in</a></p>
+      </form>
+    </div></section>
+  </main>`
+
+const states = [
+  ['Laden – Skeleton statt leerer Seite', '', `
+    <div class="row" style="justify-content: space-between; margin-bottom: 12px"><div class="skeleton" style="width: 160px; height: 24px"></div><div class="skeleton" style="width: 96px; height: 12px"></div></div>
+    <div class="grid">${'<div class="skeleton" style="aspect-ratio: 1"></div>'.repeat(14)}</div>`],
+  ['Fehler – mit Ursache und Ausweg', '', `
+    <div class="alert">${icons.alert}<div><b>Calendar could not be loaded.</b>The server is not responding. Check your connection and try again.<div class="row" style="margin-top: 10px"><button class="btn btn-secondary" style="color: var(--text)">${icons.refresh}Try again</button></div></div></div>`],
+  ['Löschen – Bestätigung', '', `
+    <div class="dialog" role="alertdialog" aria-labelledby="dlg-t">
+      <h4 id="dlg-t">Delete today's photo?</h4>
+      <p>The photo and its 2 comments will be removed. You can post a new photo today afterwards.</p>
+      <div class="row"><button class="btn btn-secondary">Cancel</button><button class="btn btn-danger">${icons.trash}Delete photo</button></div>
+    </div>`],
+  ['Erfolg – Toast (verschwindet nach 5 s)', '', `
+    <div class="toast" role="status">${icons.check}<span>Photo posted for 8 November.</span><button class="btn btn-ghost">View</button></div>
+    <div style="height: 12px"></div>
+    <div class="toast" role="status">${icons.check}<span>Entry added to your guestbook.</span></div>`],
+  ['Leer – keine Kommentare', '', `
+    <div class="empty">${icons.chat}<strong>No comments yet</strong><span>Be the first to say something about this photo.</span></div>`],
+  ['Leer – dunkler Modus', 'dark', `
+    <div class="empty">${icons.upload}<strong>Nothing posted this month</strong><span>Your photos will show up here, one per day.</span><button class="btn btn-primary">Post today's photo</button></div>`]
+]
+
+// ---- mount everything ----
+document.querySelectorAll('[data-mount]').forEach((el) => {
+  const kind = el.dataset.mount
+  if (kind === 'calendar') el.innerHTML = calendarPage(el.dataset.todayState)
+  if (kind === 'modal') el.innerHTML = modalView()
+  if (kind === 'login') el.innerHTML = loginView()
+  if (kind === 'register') el.innerHTML = registerView()
+})
+document.getElementById('states').innerHTML = states.map(([title, theme, body]) =>
+  `<div class="app" ${theme ? `data-theme="${theme}"` : ''}><h3>${title}</h3>${body}</div>`).join('')
+
+// ---- numbered markers: placed just left of their target element ----
+document.querySelectorAll('.pin[data-target]').forEach((pin) => {
+  const frame = pin.closest('.frame')
+  const target = frame.querySelector(pin.dataset.target)
+  const f = frame.getBoundingClientRect(), t = target.getBoundingClientRect()
+  pin.style.left = Math.max(4, t.left - f.left - 30) + 'px'
+  pin.style.top = (t.top - f.top + 4) + 'px'
+})
+
+// ---- token sheet ----
+const lum = (hex) => {
+  const c = hex.replace('#', '').match(/../g).map((h) => parseInt(h, 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05) }
+const css = getComputedStyle(document.documentElement)
+const v = (name) => css.getPropertyValue(name).trim()
+
+const scaleDefs = [
+  ['Indigo', 'indigo', ['50','100','200','300','400','500','600','700','800','900'], '500'],
+  ['Pink', 'pink', ['50','100','200','300','400','500','600','700','800','900'], '500'],
+  ['Gray', 'gray', ['50','100','200','300','400','500','600','700','800','900'], '900']
+]
+document.getElementById('scales').innerHTML = scaleDefs.map(([label, key, steps, base]) =>
+  `<div class="scale"><b>${label}</b>${steps.map((s) => {
+    const hex = v(`--${key}-${s}`)
+    const fg = lum(hex) > 0.35 ? '#252a34' : '#fbfbfc'
+    return `<div class="sw ${s === base ? 'base' : ''}" style="background:${hex};color:${fg}">${s}<br>${hex}</div>`
+  }).join('')}</div>`).join('')
+
+function roleList(el, theme) {
+  const probe = document.createElement('div')
+  probe.className = 'app'
+  if (theme === 'dark') probe.dataset.theme = 'dark'
+  document.body.appendChild(probe)
+  const s = getComputedStyle(probe)
+  const get = (n) => s.getPropertyValue(n).trim()
+  const toHex = (val) => {
+    if (val.startsWith('#')) return val
+    return null
+  }
+  const rows = [
+    ['--bg', 'Background (60 %)', null],
+    ['--surface', 'Surface: cards, modal (30 %)', null],
+    ['--text', 'Text primary', '--surface'],
+    ['--text-secondary', 'Text secondary', '--surface'],
+    ['--accent', 'Accent: primary button, brand (10 %)', null],
+    ['--accent-text', 'Links, accent text', '--surface'],
+    ['--focus', 'Focus ring, today', '--bg'],
+    ['--missed', 'Missed days (accent 2)', '--missed-bg'],
+    ['--danger', 'Errors, delete (semantic red)', '--danger-bg'],
+    ['--border-strong', 'Input borders', '--surface']
+  ]
+  el.innerHTML += rows.map(([name, label, against]) => {
+    const hex = get(name)
+    let r = ''
+    if (against && toHex(hex) && toHex(get(against))) {
+      const val = ratio(hex, get(against))
+      const ok = name === '--focus' || name === '--border-strong' ? val >= 3 : val >= 4.5
+      r = `<span class="ratio" style="color:${ok ? 'var(--success)' : 'var(--danger)'}">${val.toFixed(1)} : 1 ${ok ? '✓' : '✕'}</span>`
+    } else if (name === '--accent') {
+      r = `<span class="ratio">Text darauf ${ratio(get('--text-on-accent'), hex).toFixed(1)} : 1 ✓</span>`
+    }
+    return `<div class="role"><span class="chip" style="background:${hex}"></span><span>${label}<br><code>${name} · ${hex}</code></span>${r}</div>`
+  }).join('')
+  probe.remove()
+}
+roleList(document.getElementById('roles-light'), 'light')
+roleList(document.getElementById('roles-dark'), 'dark')
+
+const ratioPairs = [
+  ['Pink-Text auf Hellgrau', '#ff2e63', '#eaeaea', 'Fehler-Text (red-700)', '#c42b2b', '#eceef2'],
+  ['Heller Text auf pinkem Button', '#eaeaea', '#ff2e63', 'Delete-Button (red-700)', '#fbfbfc', '#c42b2b'],
+  ['Grauer Meta-Text', '#6b6f76', '#eaeaea', 'Text secondary (gray-600)', '#555c68', '#eceef2'],
+  ['Fokusring Cyan', '#08d9d6', '#eaeaea', 'Fokusring (indigo-600)', '#4352ea', '#eceef2']
+]
+document.getElementById('ratios').innerHTML = ratioPairs.map(([a, f1, b1, b, f2, b2]) => {
+  const r1 = ratio(f1, b1), r2 = ratio(f2, b2)
+  return `<div class="ratio-item"><span class="demo" style="background:${b1};color:${f1}">Aa</span><span><b>vorher</b> ${a}<br><span style="color:#c2103f;font-weight:700">${r1.toFixed(1)} : 1</span></span></div>
+          <div class="ratio-item"><span class="demo" style="background:${b2};color:${f2}">Aa</span><span><b>nachher</b> ${b}<br><span style="color:#1d7a46;font-weight:700">${r2.toFixed(1)} : 1</span></span></div>`
+}).join('')
+
+// ---- color alternatives for pink ----
+const alternatives = [
+  { name: 'Heute: Pink', current: true, base: '500', text: '700', dark: '300', darkTint: '#3a2530',
+    scale: ['#fff0f4','#ffdce5','#ffb8cb','#ff86a5','#ff5a83','#ff2e63','#e3164d','#c2103f','#9c0f35','#7d102e'],
+    mood: 'Referenz – so ist es heute.',
+    pros: ['Fast identisch mit TikTok-Rot #FE2C55', 'Zusammen mit Cyan: der TikTok-Look'] },
+  { name: 'A · Koralle', base: '500', text: '800', dark: '300', darkTint: '#3a2722',
+    scale: ['#fff4f0','#ffe4db','#ffc6b4','#ffa287','#ff8c6d','#ff7a59','#ec5a37','#c4421f','#9b3518','#7a2c16'],
+    mood: 'Warm und freundlich, wie Abendlicht. Komplementär zu Cyan – kräftig, aber nicht grell.',
+    pros: ['Bleibt nah am bisherigen Gefühl (warm + kühl)', 'Klar weg von TikTok', 'Text braucht Stufe 800'] },
+  { name: 'B · Amber', base: '500', text: '800', dark: '300', darkTint: '#33291a',
+    scale: ['#fff8eb','#feecc7','#fdd88a','#fbc254','#f8b335','#f5a524','#d98a0b','#a86907','#85520b','#6b430e'],
+    mood: 'Sonnig und optimistisch, „Golden Hour“ – passt zur Foto-Idee. Sehr ruhig neben Cyan.',
+    pros: ['Größte Distanz zu TikTok', '„Verpasst“ wirkt wie ein Hinweis, nicht wie ein Fehler', 'Hell – als Text nur Stufe 800'] },
+  { name: 'C · Violett', base: '500', text: '700', dark: '300', darkTint: '#2b2640',
+    scale: ['#f4f1ff','#e8e2ff','#d2c7ff','#b3a2ff','#9880ff','#7c5cff','#6842f0','#5531cf','#4528a6','#392383'],
+    mood: 'Kreativ, modern, nachdenklich. Kühl wie Cyan – sehr harmonisch, etwas „Tech“.',
+    pros: ['Bester Textkontrast schon mit Stufe 700', 'Kühle, ruhige Gesamtwirkung', 'Häufig bei Tech- und Design-Tools'] }
+]
+const steps = ['50','100','200','300','400','500','600','700','800','900']
+const week = () => [['posted','ph1',2],['posted','ph2',3],['missed','',4],['posted','ph3',5],['missed','',6],['posted','ph5',7],['today','',8]]
+  .map(([kind, ph, d]) => kind === 'posted'
+    ? '<span class="day posted"><span class="photo ' + ph + '"></span><span class="num">' + d + '</span></span>'
+    : kind === 'missed'
+      ? '<span class="day missed"><span class="num">' + d + '</span><span class="status">' + icons.x + '</span></span>'
+      : '<span class="day today"><span class="num">' + d + '</span><span class="add">' + icons.plus + '</span></span>').join('')
+const preview = (alt, theme) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  const vars = theme === 'dark'
+    ? '--missed:' + c(alt.dark) + ';--missed-bg:' + alt.darkTint + ';--brand-pink:' + c('400')
+    : '--missed:' + c(alt.text) + ';--missed-bg:' + c('50') + ';--brand-pink:' + c(alt.base)
+  return '<div class="app" ' + (theme === 'dark' ? 'data-theme="dark" ' : '') + 'style="' + vars + '">' +
+    '<div class="mini-head"><span class="brand-mark">1</span><span>Just<span style="color:var(--accent)">One</span></span><span class="avatar">A</span></div>' +
+    '<div class="mini-week">' + week() + '</div>' +
+    '<div class="mini-row"><span class="mini-badge">' + icons.x.replace('<svg', '<svg width="12" height="12"') + '2 missed</span></div>' +
+    '<div class="mini-row"><button class="btn btn-primary">Choose photo</button><button class="btn btn-danger-ghost">' + icons.trash + 'Delete</button></div>' +
+    '</div>'
+}
+document.getElementById('alts').innerHTML = alternatives.map((alt) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  const checks = [
+    ['Text auf Karte', ratio(c(alt.text), '#fbfbfc')],
+    ['Text auf Tönung', ratio(c(alt.text), c('50'))],
+    ['Dark Mode', ratio(c(alt.dark), '#252a34')]
+  ]
+  return '<article class="alt ' + (alt.current ? 'current' : '') + '">' +
+    '<div class="alt-head"><h3><span class="dot" style="background:' + c(alt.base) + '"></span>' + alt.name +
+    ' <code style="font-size:.75rem;color:#555c68">' + c(alt.base) + '</code></h3><p>' + alt.mood + '</p></div>' +
+    '<div class="alt-scale">' + alt.scale.map((hex, i) => '<span class="' + (steps[i] === alt.base ? 'base' : '') + '" style="background:' + hex + '" title="' + steps[i] + ' ' + hex + '"></span>').join('') + '</div>' +
+    '<div class="alt-checks">' + checks.map(([l, r]) => '<span>' + l + ' <b class="' + (r >= 4.5 ? 'ok' : 'bad') + '">' + r.toFixed(1) + ' : 1</b></span>').join('') + '</div>' +
+    '<div class="alt-preview">' + preview(alt, 'light') + preview(alt, 'dark') + '</div>' +
+    '<div class="alt-mood"><ul>' + alt.pros.map((p) => '<li>' + p + '</li>').join('') + '</ul></div>' +
+    '</article>'
+}).join('')
+
+
+// ---- pink stays primary, replace cyan ----
+const pinkScale = ['#fff0f4','#ffdce5','#ffb8cb','#ff86a5','#ff5a83','#ff2e63','#e3164d','#c2103f','#9c0f35','#7d102e']
+const pk = (step) => pinkScale[steps.indexOf(step)]
+const partners = [
+  { name: 'Heute: Cyan', current: true, base: '400', text: '800', focus: '600', dark: '400', darkTint: '#1d3436',
+    scale: ['#e8fcfb','#c5f7f6','#8ef0ee','#4ee6e3','#08d9d6','#06b8b5','#079391','#0a7472','#0d5c5b','#0f4a49'],
+    mood: 'Referenz – Pink + Cyan.',
+    pros: ['Cyan #08d9d6 ≈ TikTok-Cyan #25F4EE'], cons: ['Das Paar ist der TikTok-Look'] },
+  { name: 'A · Indigo', base: '500', text: '700', focus: '600', dark: '300', darkTint: '#262a45',
+    scale: ['#eef0ff','#dfe3ff','#c2c9ff','#9ea8ff','#7c88ff','#5b6cff','#4352ea','#3540c4','#2d369c','#283179'],
+    mood: 'Klar und vertrauenswürdig. Pink bekommt einen ruhigen, kühlen Gegenpol – klassisch und gut lesbar.',
+    pros: ['Bester Kontrast (Links 7,6 : 1)', 'Seriös, weit weg von TikTok'], cons: ['Pink + Blau ist verbreitet, wenig Eigenart'] },
+  { name: 'B · Amber', base: '500', text: '800', focus: '700', dark: '300', darkTint: '#33291a',
+    scale: ['#fff8eb','#feecc7','#fdd88a','#fbc254','#f8b335','#f5a524','#d98a0b','#a86907','#85520b','#6b430e'],
+    mood: 'Warm und lebendig, „Sonnenuntergang“. Pink und Gold wirken festlich und fotografisch.',
+    pros: ['Warme, eigenständige Stimmung', 'Passt zur Foto-Idee (Golden Hour)'], cons: ['Zwei warme Farben – wenig Ruhe', 'Fokus braucht dunkle Stufe 700'] },
+  { name: 'C · Salbei', base: '500', text: '700', focus: '600', dark: '300', darkTint: '#243024',
+    scale: ['#f1f6f0','#dfeadd','#c1d6bd','#9fbf99','#85ad7f','#6f9b6b','#587f55','#466645','#3a5239','#304330'],
+    mood: 'Natürlich und ruhig, wie ein Tagebuch. Das gedämpfte Grün lässt Pink als einzigen Akzent leuchten.',
+    pros: ['Ruhigste Variante („calm UI“)', 'Sehr eigenständig'], cons: ['Rot/Grün: Status nie nur über Farbe (Icons sind eingeplant)'] }
+]
+const pinkPreview = (alt, theme) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  const vars = theme === 'dark'
+    ? '--accent:' + pk('400') + ';--accent-hover:' + pk('300') + ';--text-on-accent:#1a1e27;--accent-2:' + c(alt.dark) +
+      ';--accent-text:' + c(alt.dark) + ';--focus:' + c(alt.dark) + ';--missed:' + c(alt.dark) + ';--missed-bg:' + alt.darkTint + ';--brand-pink:' + c('400')
+    : '--accent:' + pk('600') + ';--accent-hover:' + pk('700') + ';--text-on-accent:#fbfbfc;--accent-2:' + c(alt.base) +
+      ';--accent-text:' + c(alt.text) + ';--focus:' + c(alt.focus) + ';--missed:' + c(alt.text) + ';--missed-bg:' + c('50') + ';--brand-pink:' + c(alt.base)
+  return '<div class="app" ' + (theme === 'dark' ? 'data-theme="dark" ' : '') + 'style="' + vars + '">' +
+    '<div class="mini-head"><span class="brand-mark" style="background:' + (theme === 'dark' ? pk('400') : pk('500')) + '">1</span><span>Just<span style="color:' + (theme === 'dark' ? pk('400') : pk('400')) + '">One</span></span><span class="avatar">A</span></div>' +
+    '<div class="mini-progress"><span>5 of 8 days</span><span class="bar"><span style="width:62%"></span></span></div>' +
+    '<div class="mini-week">' + week() + '</div>' +
+    '<div class="mini-row"><span class="mini-badge">' + icons.x.replace('<svg', '<svg width="12" height="12"') + '2 missed</span><a class="mini-link" href="#">Create an account</a></div>' +
+    '<div class="mini-row"><button class="btn btn-primary">Choose photo</button><button class="btn btn-danger-ghost">' + icons.trash + 'Delete</button></div>' +
+    '</div>'
+}
+document.getElementById('pink-alts').innerHTML = partners.map((alt) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  const checks = [
+    ['Button', ratio('#fbfbfc', pk('600')), 4.5],
+    ['Links', ratio(c(alt.text), '#fbfbfc'), 4.5],
+    ['Fokus', ratio(c(alt.focus), '#eceef2'), 3],
+    ['Dark', ratio(c(alt.dark), '#252a34'), 4.5]
+  ]
+  return '<article class="alt ' + (alt.current ? 'current' : '') + '">' +
+    '<div class="alt-head"><h3><span class="dot" style="background:' + pk('500') + '"></span><span class="dot" style="background:' + c(alt.base) + ';margin-left:-12px;box-shadow:0 0 0 2px #fbfbfc"></span>' + alt.name +
+    ' <code style="font-size:.75rem;color:#555c68">' + c(alt.base) + '</code></h3><p>' + alt.mood + '</p></div>' +
+    '<div class="alt-scale">' + alt.scale.map((hex, i) => '<span class="' + (steps[i] === alt.base ? 'base' : '') + '" style="background:' + hex + '" title="' + steps[i] + ' ' + hex + '"></span>').join('') + '</div>' +
+    '<div class="alt-checks">' + checks.map(([l, r, min]) => '<span>' + l + ' <b class="' + (r >= min ? 'ok' : 'bad') + '">' + r.toFixed(1) + ' : 1</b></span>').join('') + '</div>' +
+    '<div class="alt-preview">' + pinkPreview(alt, 'light') + pinkPreview(alt, 'dark') + '</div>' +
+    '<div class="alt-mood"><ul>' + alt.pros.map((p) => '<li>' + p + '</li>').join('') + alt.cons.map((p) => '<li class="con">' + p + '</li>').join('') + '</ul></div>' +
+    '</article>'
+}).join('')
+
+// ---- replace cyan as primary, pink stays secondary ----
+const primaries = [
+  { id: 'cyan', name: 'Heute: Cyan', current: true, base: '400',
+    scale: ['#e8fcfb','#c5f7f6','#8ef0ee','#4ee6e3','#08d9d6','#06b8b5','#079391','#0a7472','#0d5c5b','#0f4a49'],
+    light: { btn: '400', btnText: '#252a34', hover: '300', link: '800', focus: '600', logo: '400', bar: '400' },
+    dark: { btn: '400', hover: '300', link: '400', focus: '400', logo: '400' },
+    mood: 'Referenz.', pros: [], cons: ['Mit Pink zusammen der TikTok-Look'] },
+  { id: 'indigo', name: 'A · Indigo', base: '500',
+    scale: ['#eef0ff','#dfe3ff','#c2c9ff','#9ea8ff','#7c88ff','#5b6cff','#4352ea','#3540c4','#2d369c','#283179'],
+    light: { btn: '600', btnText: '#fbfbfc', hover: '700', link: '700', focus: '600', logo: '300', bar: '500' },
+    dark: { btn: '400', hover: '300', link: '300', focus: '300', logo: '300' },
+    mood: 'Klar, ruhig, vertrauenswürdig. Pink wirkt daneben frisch statt laut.',
+    pros: ['Sehr guter Kontrast überall', 'Klassisch, wirkt „erwachsen“'], cons: ['Blau + Pink ist verbreitet – wenig Eigenart'] },
+  { id: 'violet', name: 'B · Violett', base: '500',
+    scale: ['#f4f1ff','#e8e2ff','#d2c7ff','#b3a2ff','#9880ff','#7c5cff','#6842f0','#5531cf','#4528a6','#392383'],
+    light: { btn: '600', btnText: '#fbfbfc', hover: '700', link: '700', focus: '600', logo: '300', bar: '500' },
+    dark: { btn: '400', hover: '300', link: '300', focus: '300', logo: '300' },
+    mood: 'Kreativ und harmonisch: Pink und Violett liegen nah beieinander, das wirkt weich und verspielt.',
+    pros: ['Harmonischste Kombination', 'Kreativ, passt zu Fotos'], cons: ['Pink + Violett erinnert an Instagram-Verläufe'] },
+  { id: 'sage', name: 'C · Salbei', base: '500',
+    scale: ['#f1f6f0','#dfeadd','#c1d6bd','#9fbf99','#85ad7f','#6f9b6b','#587f55','#466645','#3a5239','#304330'],
+    light: { btn: '700', btnText: '#fbfbfc', hover: '800', link: '700', focus: '600', logo: '300', bar: '500' },
+    dark: { btn: '400', hover: '300', link: '300', focus: '300', logo: '300' },
+    mood: 'Natürlich und ruhig wie ein Tagebuch. Pink setzt kleine, warme Akzente.',
+    pros: ['Ruhigste Variante („calm UI“)', 'Sehr eigenständig'], cons: ['Grün + Pink/Rot: Status braucht Icons (sind eingeplant)'] },
+  { id: 'amber', name: 'D · Amber', base: '500',
+    scale: ['#fff8eb','#feecc7','#fdd88a','#fbc254','#f8b335','#f5a524','#d98a0b','#a86907','#85520b','#6b430e'],
+    light: { btn: '500', btnText: '#1a1e27', hover: '400', link: '800', focus: '700', logo: '400', bar: '500' },
+    dark: { btn: '400', hover: '300', link: '300', focus: '300', logo: '400' },
+    mood: 'Warm und sonnig, „Golden Hour“. Zusammen mit Pink sehr lebendig.',
+    pros: ['Passt zur Foto-Idee', 'Weit weg von TikTok'], cons: ['Zwei warme Farben – unruhiger', 'Gelbe Buttons brauchen dunkle Schrift'] }
+]
+const varsFor = (alt, theme) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  if (theme === 'dark') {
+    const d = alt.dark
+    return '--accent:' + c(d.btn) + ';--accent-hover:' + c(d.hover) + ';--text-on-accent:#1a1e27;--accent-text:' + c(d.link) +
+      ';--focus:' + c(d.focus) + ';--brand-on-dark:' + c(d.logo)
+  }
+  const l = alt.light
+  return '--accent:' + c(l.btn) + ';--accent-hover:' + c(l.hover) + ';--text-on-accent:' + l.btnText + ';--accent-text:' + c(l.link) +
+    ';--focus:' + c(l.focus) + ';--brand-on-dark:' + c(l.logo)
+}
+const primaryCard = (alt) => {
+  const c = (step) => alt.scale[steps.indexOf(step)]
+  const checks = [
+    ['Button', ratio(alt.light.btnText, c(alt.light.btn)), 4.5],
+    ['Links', ratio(c(alt.light.link), '#fbfbfc'), 4.5],
+    ['Fokus', ratio(c(alt.light.focus), '#eceef2'), 3],
+    ['Dark', ratio('#1a1e27', c(alt.dark.btn)), 4.5]
+  ]
+  return '<article class="alt ' + (alt.current ? 'current' : '') + '">' +
+    '<div class="alt-head"><h3><span class="dot" style="background:' + c(alt.base) + '"></span><span class="dot" style="background:#ff2e63;margin-left:-12px;box-shadow:0 0 0 2px #fbfbfc"></span>' + alt.name +
+    ' <code style="font-size:.75rem;color:#555c68">' + c(alt.base) + '</code></h3><p>' + alt.mood + '</p></div>' +
+    '<div class="alt-scale">' + alt.scale.map((hex, i) => '<span class="' + (steps[i] === alt.base ? 'base' : '') + '" style="background:' + hex + '" title="' + steps[i] + ' ' + hex + '"></span>').join('') + '</div>' +
+    '<div class="alt-checks">' + checks.map(([l, r, min]) => '<span>' + l + ' <b class="' + (r >= min ? 'ok' : 'bad') + '">' + r.toFixed(1) + ' : 1</b></span>').join('') + '</div>' +
+    '<div class="alt-mood"><ul>' + alt.pros.map((p) => '<li>' + p + '</li>').join('') + alt.cons.map((p) => '<li class="con">' + p + '</li>').join('') + '</ul></div>' +
+    '<button class="btn btn-secondary pick" data-pick="' + alt.id + '" style="font:600 .875rem var(--font-ui)">In der Vorschau zeigen ↓</button>' +
+    '</article>'
+}
+document.getElementById('primary-alts').innerHTML = primaries.map(primaryCard).join('')
+const switcher = document.getElementById('primary-switch')
+switcher.innerHTML += primaries.map((alt) => '<button type="button" data-pick="' + alt.id + '" aria-pressed="false"><i style="background:' +
+  alt.scale[steps.indexOf(alt.base)] + '"></i>' + alt.name.replace(/^[A-D] · /, '') + '</button>').join('')
+function showPrimary(id) {
+  const alt = primaries.find((a) => a.id === id) || primaries[1]
+  document.querySelectorAll('.primary-preview').forEach((el) => {
+    el.setAttribute('style', varsFor(alt, el.dataset.theme === 'dark' ? 'dark' : 'light'))
+  })
+  switcher.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pick === alt.id)))
+  document.getElementById('primary-label').textContent = 'Light · Hauptfarbe ' + alt.name.replace(/^[A-D] · /, '') + ' · Zweitfarbe Pink'
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pick]')
+  if (!b) return
+  showPrimary(b.dataset.pick)
+  if (b.classList.contains('pick')) document.getElementById('primary-switch').scrollIntoView({ behavior: 'smooth' })
+})
+showPrimary((location.hash.match(/primary-(\w+)/) || [])[1] || 'indigo')
+</script>
+</body>
+</html>

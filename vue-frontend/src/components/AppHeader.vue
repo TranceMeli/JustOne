@@ -1,23 +1,48 @@
 <script setup>
+import { computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useTheme } from '../composables/useTheme'
+import AppIcon from './AppIcon.vue'
 
 const authStore = useAuthStore()
+const { mode, cycle } = useTheme()
+
+const themeInfo = computed(() => ({
+  system: { icon: 'system', label: 'Theme: system' },
+  light: { icon: 'sun', label: 'Theme: light' },
+  dark: { icon: 'moon', label: 'Theme: dark' }
+})[mode.value])
 </script>
 
 <template>
   <header class="app-header">
-    <div class="header-inner">
-      <a href="/" class="brand" aria-label="JustOne home">
-        <span class="logo-mark" aria-hidden="true">1</span>
-        <span class="logo-text">Just<span class="accent">One</span></span>
+    <div class="inner">
+      <a href="/" class="brand" aria-label="JustOne – home">
+        <span class="brand-mark" aria-hidden="true">1</span>
+        <span>Just<span class="one">One</span></span>
       </a>
 
-      <span class="tagline">One photo per day.</span>
+      <div class="actions">
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon"
+          :aria-label="`${themeInfo.label} (click to change)`"
+          :title="themeInfo.label"
+          @click="cycle"
+        >
+          <AppIcon :name="themeInfo.icon" />
+        </button>
 
-      <div v-if="authStore.isLoggedIn" class="user-area">
-        <span class="avatar" aria-hidden="true">{{ authStore.email?.charAt(0).toUpperCase() }}</span>
-        <span class="user-email" :title="authStore.email">{{ authStore.email }}</span>
-        <button type="button" class="logout-button" @click="authStore.logout()">Log out</button>
+        <template v-if="authStore.isLoggedIn">
+          <span class="user-chip">
+            <span class="avatar" aria-hidden="true">{{ authStore.displayName.charAt(0).toUpperCase() }}</span>
+            <span class="email">{{ authStore.email }}</span>
+          </span>
+          <button type="button" class="btn btn-ghost" @click="authStore.logout()">
+            <AppIcon name="logout" />
+            <span class="label">Log out</span>
+          </button>
+        </template>
       </div>
     </div>
   </header>
@@ -28,132 +53,91 @@ const authStore = useAuthStore()
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--color-dark);
-  color: var(--color-light);
-  border-bottom: 4px solid var(--color-cyan);
-  box-shadow: 0 4px 0 var(--color-pink);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  border-bottom: 3px solid var(--brand-on-dark);
 }
 
-.header-inner {
-  max-width: 960px;
+.inner {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--color-light);
+  color: inherit;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   text-decoration: none;
 }
 
-.brand:hover {
-  color: var(--color-light);
-  text-decoration: none;
-}
-
-.logo-mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  background: var(--color-cyan);
-  color: var(--color-dark);
-  border: 2px solid var(--color-light);
-  border-radius: var(--radius);
-  box-shadow: 3px 3px 0 var(--color-pink);
-  font-weight: 900;
-  font-size: 1.2rem;
-  transition: transform var(--transition);
-}
-
-.brand:hover .logo-mark {
-  transform: rotate(-8deg);
-}
-
-.logo-text {
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-
-.accent {
-  color: var(--color-cyan);
-}
-
-.tagline {
-  padding-left: 16px;
-  border-left: 2px solid var(--color-pink);
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
-.user-area {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.avatar {
-  flex-shrink: 0;
+.brand-mark {
   width: 32px;
   height: 32px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: var(--color-pink);
-  color: var(--color-light);
-  font-weight: 800;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
-.user-email {
+.one {
+  color: var(--brand-on-dark);
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
+}
+
+.actions .btn-ghost:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: var(--text-sm);
+}
+
+.user-chip .avatar {
+  width: 28px;
+  height: 28px;
+}
+
+.email {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
 }
 
-.logout-button {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  background: transparent;
-  color: var(--color-pink);
-  border: 2px solid var(--color-pink);
-  border-radius: var(--radius);
-  font-weight: 700;
-  cursor: pointer;
-}
+@media (max-width: 600px) {
+  .inner {
+    padding: 8px 16px;
+  }
 
-.logout-button:hover {
-  background: var(--color-pink);
-  color: var(--color-light);
-}
-
-@media (max-width: 720px) {
-  .tagline {
+  .email,
+  .label {
     display: none;
   }
-}
 
-@media (max-width: 480px) {
-  .header-inner {
-    padding: 10px 16px;
-    gap: 10px;
-  }
-
-  .logo-text {
-    font-size: 1.2rem;
-  }
-
-  .user-email {
-    display: none;
+  .user-chip {
+    padding: 4px;
   }
 }
 </style>

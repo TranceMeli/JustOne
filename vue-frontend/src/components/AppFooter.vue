@@ -5,23 +5,22 @@ const year = new Date().getFullYear()
 <template>
   <footer class="app-footer">
     <div class="footer-grid">
-      <section class="brand">
-        <span class="logo">JustOne</span>
+      <section>
+        <span class="brand"><span class="brand-mark" aria-hidden="true">1</span>Just<span class="one">One</span></span>
         <p class="tagline">One photo per day. Nothing more.</p>
       </section>
 
       <section>
-        <h4>Company</h4>
+        <h2>Company</h2>
         <address>
           JustOne GmbH<br />
           Beispielstraße 42<br />
-          10115 Berlin<br />
-          Germany
+          10115 Berlin, Germany
         </address>
       </section>
 
       <section>
-        <h4>Contact</h4>
+        <h2>Contact</h2>
         <ul>
           <li><a href="mailto:hello@justone.example">hello@justone.example</a></li>
           <li><a href="tel:+493012345678">+49 30 1234 5678</a></li>
@@ -29,92 +28,101 @@ const year = new Date().getFullYear()
       </section>
 
       <section>
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Imprint</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Use</a></li>
+        <h2>Legal</h2>
+        <!-- Placeholder pages don't exist yet, so these are plain text instead of dead "#" links. -->
+        <ul class="muted">
+          <li>Imprint (coming soon)</li>
+          <li>Privacy (coming soon)</li>
+          <li>Terms (coming soon)</li>
         </ul>
       </section>
     </div>
 
-    <div class="footer-bottom">
-      <span>&copy; {{ year }} JustOne GmbH · Made with ❤ in Berlin</span>
-    </div>
+    <div class="footer-bottom">&copy; {{ year }} JustOne GmbH · Berlin</div>
   </footer>
 </template>
 
 <style scoped>
 .app-footer {
-  margin-top: 48px;
-  background: var(--color-cyan);
-  color: var(--color-dark);
-  border-top: 4px solid var(--color-dark);
+  margin-top: var(--space-7);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  border-top: 3px solid var(--brand-on-dark);
+  font-size: var(--text-sm);
 }
 
 .footer-grid {
-  max-width: 960px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: var(--space-6) 24px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-5);
 }
 
-.logo {
-  font-size: 1.6rem;
-  font-weight: 900;
-  letter-spacing: 1px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.one {
+  color: var(--brand-on-dark);
+  margin-left: -10px;
 }
 
 .tagline {
-  margin: 6px 0 0;
+  margin: var(--space-2) 0 0;
+  color: var(--text-inverse-secondary);
+}
+
+h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
   font-weight: 600;
-}
-
-h4 {
-  margin: 0 0 10px;
-  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-h4::after {
-  content: '';
-  display: block;
-  width: 28px;
-  height: 3px;
-  margin-top: 4px;
-  background: var(--color-pink);
-  border-radius: 2px;
+  letter-spacing: 0.08em;
+  color: var(--text-inverse-secondary);
 }
 
 address {
   font-style: normal;
-  line-height: 1.6;
 }
 
 ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  line-height: 1.8;
+  display: grid;
+  gap: 4px;
 }
 
 a {
-  color: var(--color-dark);
-  font-weight: 600;
+  color: var(--brand-on-dark);
+  text-underline-offset: 3px;
 }
 
-a:hover {
-  color: var(--color-pink);
+.muted {
+  color: var(--text-inverse-secondary);
 }
 
 .footer-bottom {
-  padding: 12px 24px;
-  background: var(--color-dark);
-  color: var(--color-light);
+  padding: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
-  font-size: 0.85rem;
+  color: var(--text-inverse-secondary);
+  font-size: var(--text-xs);
 }
 </style>

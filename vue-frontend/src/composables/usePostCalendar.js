@@ -3,25 +3,40 @@ import apiClient from '../api/axios'
 import { BACKEND_ORIGIN } from '../config'
 import { useAuthStore } from '../stores/auth'
 
-const today = new Date()
-const CURRENT_YEAR = today.getFullYear()
-const CURRENT_MONTH = today.getMonth() + 1 // 1-12
-const CURRENT_DAY = today.getDate()
+// Read "today" fresh every time instead of once at module load, so a tab left open
+// over midnight doesn't keep treating yesterday as today.
+function currentDate() {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
+}
 
 export function usePostCalendar() {
   const authStore = useAuthStore()
-  const viewYear = ref(CURRENT_YEAR)
-  const viewMonth = ref(CURRENT_MONTH)
+  const start = currentDate()
+  const viewYear = ref(start.year)
+  const viewMonth = ref(start.month)
   const monthDays = ref([])
   const isLoading = ref(false)
   const errorMessage = ref('')
 
-  const isCurrentMonth = computed(
-    () => viewYear.value === CURRENT_YEAR && viewMonth.value === CURRENT_MONTH
-  )
+  // Today's post is kept separately, so the "Today" card stays correct while browsing older months.
+  const todayPost = ref(null) // { imageUrl, postId } or null
+  const todayKnown = ref(false)
 
-  const canGoPrev = computed(() => !(viewYear.value === CURRENT_YEAR && viewMonth.value === 1))
+  const isCurrentMonth = computed(() => {
+    const today = currentDate()
+    return viewYear.value === today.year && viewMonth.value === today.month
+  })
+
+  const canGoPrev = computed(() => !(viewYear.value === currentDate().year && viewMonth.value === 1))
   const canGoNext = computed(() => !isCurrentMonth.value)
+
+  // Monday-based offset of the 1st, so the grid lines up under Mon..Sun.
+  const leadingBlanks = computed(() => (new Date(viewYear.value, viewMonth.value - 1, 1).getDay() + 6) % 7)
+
+  const postedCount = computed(() => monthDays.value.filter((d) => d.status === 'posted').length)
+  const elapsedCount = computed(() => monthDays.value.filter((d) => d.status !== 'future').length)
+  const postedDays = computed(() => monthDays.value.filter((d) => d.status === 'posted'))
 
   function prevMonth() {
     if (!canGoPrev.value) return
@@ -43,11 +58,19 @@ export function usePostCalendar() {
     }
   }
 
-  // Fetches the real calendar data from the backend for the currently displayed month.
+  function goToCurrentMonth() {
+    const today = currentDate()
+    viewYear.value = today.year
+    viewMonth.value = today.month
+  }
+
+  // Fetches the calendar data from the backend for the currently displayed month.
   async function fetchMonth() {
-    // Without a token the request would fail anyway (401) - just wait until logged in
-    // instead of showing an error message.
+    // Without a token the request would fail anyway (401) - just wait until logged in.
     if (!authStore.isLoggedIn) {
+      monthDays.value = []
+      todayPost.value = null
+      todayKnown.value = false
       return
     }
 
@@ -58,56 +81,55 @@ export function usePostCalendar() {
       const response = await apiClient.get('/posts/calendar', {
         params: { year: viewYear.value, month: viewMonth.value }
       })
+      const today = currentDate()
+      const current = isCurrentMonth.value
 
       monthDays.value = response.data.days.map((d) => {
+        const base = { day: d.day, isToday: current && d.day === today.day }
+
         // Future days in the current month: not reached yet, regardless of the DB
-        if (isCurrentMonth.value && d.day > CURRENT_DAY) {
-          return { day: d.day, status: 'future' }
+        if (current && d.day > today.day) {
+          return { ...base, status: 'future' }
         }
-
-        // Today, but not posted yet
-        if (isCurrentMonth.value && d.day === CURRENT_DAY && !d.hasPost) {
-          return { day: d.day, status: 'today' }
+        if (d.hasPost) {
+          return { ...base, status: 'posted', imageUrl: `${BACKEND_ORIGIN}${d.imageUrl}`, postId: d.postId }
         }
-
-        return {
-          day: d.day,
-          status: d.hasPost ? 'posted' : 'missed',
-          imageUrl: d.imageUrl ? `${BACKEND_ORIGIN}${d.imageUrl}` : null,
-          postId: d.postId ?? null
-        }
+        return { ...base, status: base.isToday ? 'today' : 'missed' }
       })
-    } catch (err) {
-      errorMessage.value = 'Could not load the calendar.'
+
+      if (current) {
+        const entry = monthDays.value.find((d) => d.isToday)
+        todayPost.value = entry?.status === 'posted' ? { imageUrl: entry.imageUrl, postId: entry.postId } : null
+        todayKnown.value = true
+      }
+    } catch {
+      errorMessage.value = 'The server is not responding. Check your connection and try again.'
     } finally {
       isLoading.value = false
     }
   }
 
-  // Reload on every month navigation - and also whenever the login status changes
-  // (e.g. right after login, when no token existed yet before).
+  // Reload on every month navigation - and whenever the login status changes.
   watch([viewYear, viewMonth, () => authStore.isLoggedIn], fetchMonth, { immediate: true })
 
-  const todayImageUrl = computed(() => {
-    if (!isCurrentMonth.value) return null
-    const entry = monthDays.value.find((d) => d.day === CURRENT_DAY)
-    return entry?.imageUrl ?? null
-  })
-
-  // Optimistic update right after upload/change, without waiting for a re-fetch.
-  function recordPost(imageUrl, postId) {
-    const index = monthDays.value.findIndex((d) => d.day === CURRENT_DAY)
+  function setTodayEntry(entry) {
+    if (!isCurrentMonth.value) return
+    const index = monthDays.value.findIndex((d) => d.isToday)
     if (index !== -1) {
-      monthDays.value[index] = { day: CURRENT_DAY, status: 'posted', imageUrl, postId }
+      monthDays.value[index] = { ...monthDays.value[index], ...entry }
     }
   }
 
-  // After deleting: reset today back to "still open".
+  // Optimistic update right after upload/change, without waiting for a re-fetch.
+  function recordPost(imageUrl, postId) {
+    todayPost.value = { imageUrl, postId }
+    setTodayEntry({ status: 'posted', imageUrl, postId })
+  }
+
+  // After deleting: today is open again.
   function removePost() {
-    const index = monthDays.value.findIndex((d) => d.day === CURRENT_DAY)
-    if (index !== -1) {
-      monthDays.value[index] = { day: CURRENT_DAY, status: 'today' }
-    }
+    todayPost.value = null
+    setTodayEntry({ status: 'today', imageUrl: undefined, postId: undefined })
   }
 
   return {
@@ -118,11 +140,18 @@ export function usePostCalendar() {
     canGoNext,
     prevMonth,
     nextMonth,
+    goToCurrentMonth,
+    leadingBlanks,
     monthDays,
-    todayImageUrl,
+    postedCount,
+    elapsedCount,
+    postedDays,
+    todayPost,
+    todayKnown,
     recordPost,
     removePost,
     isLoading,
-    errorMessage
+    errorMessage,
+    retry: fetchMonth
   }
 }
