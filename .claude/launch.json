@@ -8,6 +8,12 @@
       "port": 5250
     },
     {
+      "name": "backend-demo",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "asp-backend", "--launch-profile", "http", "--", "--DemoData:Enabled=true", "--ConnectionStrings:DefaultConnection=Data Source=demo.db"],
+      "port": 5250
+    },
+    {
       "name": "frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "vue-frontend"],

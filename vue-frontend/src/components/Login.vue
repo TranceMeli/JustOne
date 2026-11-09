@@ -7,8 +7,8 @@ const emit = defineEmits(['switch-to-register'])
 
 const authStore = useAuthStore()
 
-// Seeded by the backend's DbSeeder - only for trying the app out.
-const DEMO = { email: 'admin@justone.com', password: 'Admin123!' }
+// Regular demo user, seeded by the backend's DbSeeder - only for trying the app out.
+const DEMO = { email: 'anna@justone.com', password: 'Demo123!' }
 
 const email = ref('')
 const password = ref('')

@@ -12,23 +12,23 @@
 ![Pinia](https://img.shields.io/badge/Pinia-FFD859?style=for-the-badge&logo=vue.js&logoColor=black)
 ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
 
-A social network with one simple rule: **one photo per day, nothing more.** No endless feed, no pressure to post constantly, just a daily snapshot collected in a monthly overview.
+A social network with one simple rule: **one post per day, nothing more** – a photo, a GIF or a few words. No endless feed, no pressure to post constantly, just a daily moment collected in a monthly overview.
 
 ## Screenshots
 
 ### Monthly calendar
 
-The month as a real calendar (Monday to Sunday) with a "days posted" counter. Missed days are marked with an icon and text, not only by color. Next to it sits the one task of the day: the "Today" card with drag & drop upload. Below it, the private guestbook.
+The month as a real calendar (Monday to Sunday) with a "days posted" counter. Photos, GIFs and text posts (with a quote mark and their first words) sit side by side; missed days are marked with an icon and text, not only by color. Next to it is the one task of the day: the "Today" card. Below it, the guestbook that everyone can read.
 
 ![JustOne calendar view with today card, guestbook and footer](docs/screenshot.jpeg)
 
-### Comments
+### Posts and comments
 
-The photo view follows the theme and adapts to the photo: portrait images sit next to the comments, landscape images are shown above them. Arrow keys switch to the previous/next photo, Escape closes it.
+The post view follows the theme and adapts to the content: portrait images and texts sit next to the comments, landscape images are shown above them. Arrow keys switch to the previous/next post, Escape closes it.
 
-| Portrait photo | Landscape photo |
-| --- | --- |
-| ![Comments next to a portrait photo](docs/comments-screenshot.jpeg) | ![Comments below a landscape photo](docs/comments-landscape-screenshot.jpeg) |
+| Portrait photo | Landscape image | Text post |
+| --- | --- | --- |
+| ![Comments next to a portrait photo](docs/comments-screenshot.jpeg) | ![Comments below a landscape image](docs/comments-landscape-screenshot.jpeg) | ![A short poem with comments](docs/text-screenshot.jpeg) |
 
 ### Dark mode
 
@@ -38,15 +38,15 @@ Its own dark palette (not an inverted light theme): raised surfaces get lighter,
 
 ### Login and mobile view
 
-Forms with visible labels, a demo-account button and error messages that explain what to do. On phones the most important card – today's photo – comes first.
+Forms with visible labels, a demo-account button and error messages that explain what to do. On phones the most important card – today's post – comes first; switch between "Photo / GIF" and "Text" to write a few lines instead.
 
-| Login | Mobile |
-| --- | --- |
-| ![Login page](docs/login-screenshot.jpeg) | <img src="docs/mobile-screenshot.jpeg" alt="Calendar on a phone" width="300"> |
+| Login | Mobile | Writing a text post |
+| --- | --- | --- |
+| ![Login page](docs/login-screenshot.jpeg) | <img src="docs/mobile-screenshot.jpeg" alt="Calendar on a phone" width="260"> | <img src="docs/mobile-text-screenshot.jpeg" alt="Writing a short poem on a phone" width="260"> |
 
 ## Concept
 
-Every user sees their month as a grid of boxes, one per day. If a photo was posted, the box shows it. If not, it's marked empty. Posting is only possible for the **current day**. There's no posting for past dates.
+Every user sees their month as a grid of boxes, one per day. A day's post is either an image (photo or GIF) or a short text of up to 500 characters – a poem, a thought, a quote. The box shows it; if nothing was posted, it's marked as missed. Posting is only possible for the **current day**. There's no posting for past dates.
 
 ## Features
 
@@ -55,10 +55,11 @@ Every user sees their month as a grid of boxes, one per day. If a photo was post
 - **Self-registration**: new accounts always start as `User`; role upgrades only by an admin
 - **Monthly calendar**: dynamic day count per month, navigation from January to the current month, counter of posted days
 - **One post per day**: enforced server-side (not just in the frontend), including change/delete for today's post
+- **Photo, GIF or text**: today's post can be an image (animated GIFs included) or up to 500 characters of text; it can be switched between both later
 - **Time-zone aware**: "today" is determined in the user's own time zone (sent by the browser), not in UTC
 - **Safe uploads**: only JPG, PNG, GIF and WebP images up to 10 MB are accepted
 - **Daily comments**: comments attached directly to a post, with author display
-- **Guestbook**: a dedicated section below the calendar
+- **Public guestbook**: everyone sees all entries; authors are shown as "First name + initial", never by email (comments too)
 - **Comment box**: auto-growing text field, emoji picker, Enter to send, character counter
 - **Feedback for every state**: skeletons while loading, errors with a "Try again" action, confirmation before deleting, toasts after posting
 - **Dark mode**: follows the system, switchable (system / light / dark) in the header
@@ -94,8 +95,9 @@ JustOne/
 │   ├── Controller/            # Auth, Posts, Comments, Guestbook
 │   ├── Entities/              # Post, Comment, RefreshToken, GuestbookEntry, ...
 │   ├── Models/                # Request/response DTOs
-│   ├── Data/                  # AppDbContext, DbSeeder
+│   ├── Data/                  # AppDbContext, DbSeeder, DemoDataSeeder
 │   ├── Migrations/            # EF Core migrations
+│   ├── SeedData/              # Generated demo photos and GIFs (demo mode)
 │   └── Auth/                  # JWT settings, TokenService
 ├── docs/                      # Screenshots for this README, design mockups
 └── vue-frontend/              # Vue 3 frontend
@@ -130,7 +132,19 @@ On first start the roles and a demo admin account are seeded:
 
 | Email | Password | Role |
 | --- | --- | --- |
-| `admin@justone.com` | `Admin123!` | Admin |
+| `admin@justone.com` | `Admin123!` | Admin (moderation) |
+| `anna@justone.com` | `Demo123!` | User – used by the "Try the demo account" button |
+
+### Demo data (optional)
+
+To see the app with content – like in the screenshots – start the backend in demo mode. It uses its own database (`demo.db`), so your normal data stays untouched:
+
+```bash
+cd asp-backend
+dotnet run -- --DemoData:Enabled=true --ConnectionStrings:DefaultConnection="Data Source=demo.db"
+```
+
+On the first start this creates three friends for Anna (`lena@`, `max@`, `sara@justone.com`, password `Demo123!`) and fills the previous and the current month for all four with photos, GIFs and short texts (only 2–3 missed days per user, today stays open), plus comments and guestbook entries. Photos and GIFs are generated illustrations from [`asp-backend/SeedData`](asp-backend/SeedData) – no third-party images. Delete `demo.db` to start over. Demo mode only works in the Development environment.
 
 ### Frontend
 

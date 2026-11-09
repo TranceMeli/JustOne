@@ -10,6 +10,15 @@ function currentDate() {
   return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
 }
 
+// A post is either an image (photo or GIF) or a text.
+// Image paths from the backend are relative and get the backend origin prepended.
+function toPost(postId, imageUrl, text, prefix = true) {
+  if (imageUrl) {
+    return { postId, kind: 'image', imageUrl: prefix ? `${BACKEND_ORIGIN}${imageUrl}` : imageUrl }
+  }
+  return { postId, kind: 'text', text }
+}
+
 export function usePostCalendar() {
   const authStore = useAuthStore()
   const start = currentDate()
@@ -20,7 +29,7 @@ export function usePostCalendar() {
   const errorMessage = ref('')
 
   // Today's post is kept separately, so the "Today" card stays correct while browsing older months.
-  const todayPost = ref(null) // { imageUrl, postId } or null
+  const todayPost = ref(null) // { postId, imageUrl } or { postId, text }, or null
   const todayKnown = ref(false)
 
   const isCurrentMonth = computed(() => {
@@ -92,14 +101,14 @@ export function usePostCalendar() {
           return { ...base, status: 'future' }
         }
         if (d.hasPost) {
-          return { ...base, status: 'posted', imageUrl: `${BACKEND_ORIGIN}${d.imageUrl}`, postId: d.postId }
+          return { ...base, status: 'posted', ...toPost(d.postId, d.imageUrl, d.text) }
         }
         return { ...base, status: base.isToday ? 'today' : 'missed' }
       })
 
       if (current) {
         const entry = monthDays.value.find((d) => d.isToday)
-        todayPost.value = entry?.status === 'posted' ? { imageUrl: entry.imageUrl, postId: entry.postId } : null
+        todayPost.value = entry?.status === 'posted' ? toPost(entry.postId, entry.imageUrl, entry.text, false) : null
         todayKnown.value = true
       }
     } catch {
@@ -121,15 +130,17 @@ export function usePostCalendar() {
   }
 
   // Optimistic update right after upload/change, without waiting for a re-fetch.
-  function recordPost(imageUrl, postId) {
-    todayPost.value = { imageUrl, postId }
-    setTodayEntry({ status: 'posted', imageUrl, postId })
+  // Takes the backend's PostResponse ({ id, imageUrl, text }).
+  function recordPost(response) {
+    const post = toPost(response.id, response.imageUrl, response.text)
+    todayPost.value = post
+    setTodayEntry({ status: 'posted', imageUrl: undefined, text: undefined, ...post })
   }
 
   // After deleting: today is open again.
   function removePost() {
     todayPost.value = null
-    setTodayEntry({ status: 'today', imageUrl: undefined, postId: undefined })
+    setTodayEntry({ status: 'today', imageUrl: undefined, text: undefined, postId: undefined })
   }
 
   return {

@@ -26,12 +26,15 @@ public class CommentsController(AppDbContext db) : ControllerBase
         }
 
         // Join against the Identity user table to show the author of each comment.
-        var comments = await db.Comments
+        var rows = await db.Comments
             .Where(c => c.PostId == postId)
             .OrderBy(c => c.CreatedAt)
             .Join(db.Users, c => c.UserId, u => u.Id,
-                (c, u) => new CommentResponse(c.Id, c.Message, c.CreatedAt, u.Email!))
+                (c, u) => new { c.Id, c.Message, c.CreatedAt, c.UserId, u.FirstName, u.LastName, u.Email })
             .ToListAsync();
+
+        var comments = rows.Select(r => new CommentResponse(
+            r.Id, r.Message, r.CreatedAt, UserNames.Display(r.FirstName, r.LastName, r.Email), r.UserId == UserId));
 
         return Ok(comments);
     }
@@ -50,6 +53,12 @@ public class CommentsController(AppDbContext db) : ControllerBase
             return NotFound("Post not found.");
         }
 
+        var author = await db.Users.FindAsync(UserId);
+        if (author is null)
+        {
+            return Unauthorized();
+        }
+
         var comment = new Comment
         {
             PostId = postId,
@@ -61,8 +70,7 @@ public class CommentsController(AppDbContext db) : ControllerBase
         db.Comments.Add(comment);
         await db.SaveChangesAsync();
 
-        var authorEmail = User.FindFirstValue(JwtRegisteredClaimNames.Email) ?? string.Empty;
-
-        return Ok(new CommentResponse(comment.Id, comment.Message, comment.CreatedAt, authorEmail));
+        return Ok(new CommentResponse(
+            comment.Id, comment.Message, comment.CreatedAt, UserNames.Display(author.FirstName, author.LastName, author.Email), true));
     }
 }

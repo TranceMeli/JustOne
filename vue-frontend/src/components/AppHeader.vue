@@ -36,7 +36,7 @@ const themeInfo = computed(() => ({
         <template v-if="authStore.isLoggedIn">
           <span class="user-chip">
             <span class="avatar" aria-hidden="true">{{ authStore.displayName.charAt(0).toUpperCase() }}</span>
-            <span class="email">{{ authStore.email }}</span>
+            <span class="email" :title="authStore.email">{{ authStore.displayName }}</span>
           </span>
           <button type="button" class="btn btn-ghost" @click="authStore.logout()">
             <AppIcon name="logout" />

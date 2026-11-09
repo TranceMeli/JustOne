@@ -22,6 +22,7 @@ namespace JustOne.Data
 
             // Every lookup filters by these columns - without indexes SQLite scans the whole table.
             builder.Entity<Post>().HasIndex(p => new { p.UserId, p.CreatedAt });
+            builder.Entity<Post>().Property(p => p.Text).HasMaxLength(500);
             builder.Entity<RefreshToken>().HasIndex(t => t.Token).IsUnique();
             builder.Entity<RefreshToken>().HasIndex(t => t.UserId);
             builder.Entity<GuestbookEntry>().HasIndex(e => e.UserId);

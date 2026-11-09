@@ -15,6 +15,7 @@ namespace JustOne.Controllers;
 public class PostsController(AppDbContext db, IWebHostEnvironment env) : ControllerBase
 {
     private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+    private const int MaxTextLength = 500;
 
     // Only real image formats - anything else (e.g. .html, .svg) could run script code
     // when served from our own origin via UseStaticFiles.
@@ -40,7 +41,7 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         // Range query instead of .Year/.Month so the (UserId, CreatedAt) index can be used.
         var posts = await db.Posts
             .Where(p => p.UserId == UserId && p.CreatedAt >= monthStart && p.CreatedAt < monthEnd)
-            .Select(p => new { p.Id, p.ImagePath, p.CreatedAt })
+            .Select(p => new { p.Id, p.ImagePath, p.Text, p.CreatedAt })
             .ToListAsync();
 
         // GroupBy instead of ToDictionary: a duplicate day must not crash the whole calendar.
@@ -50,18 +51,18 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
 
         var days = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
             .Select(day => postsByDay.TryGetValue(day, out var post)
-                ? new CalendarDayResponse(day, true, post.ImagePath, post.Id)
-                : new CalendarDayResponse(day, false, null, null))
+                ? new CalendarDayResponse(day, true, post.ImagePath, post.Id, post.Text)
+                : new CalendarDayResponse(day, false, null, null, null))
             .ToList();
 
         return Ok(new CalendarResponse(year, month, days));
     }
 
-    // POST /api/posts (multipart/form-data with a file field named "file")
+    // POST /api/posts (multipart/form-data with EITHER an image "file" (photo or GIF) OR a "text")
     [HttpPost]
-    public async Task<IActionResult> Create(IFormFile file)
+    public async Task<IActionResult> Create([FromForm] IFormFile? file, [FromForm] string? text)
     {
-        if (ValidateFile(file) is { } error)
+        if (ValidateContent(file, text) is { } error)
         {
             return BadRequest(error);
         }
@@ -79,21 +80,22 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         var post = new Post
         {
             UserId = UserId,
-            ImagePath = await SaveImageAsync(file),
+            ImagePath = file is null ? null : await SaveImageAsync(file),
+            Text = file is null ? text!.Trim() : null,
             CreatedAt = today
         };
 
         db.Posts.Add(post);
         await db.SaveChangesAsync();
 
-        return Ok(new PostResponse(post.Id, post.CreatedAt, post.ImagePath));
+        return Ok(ToResponse(post));
     }
 
-    // PUT /api/posts (multipart/form-data with a new file "file")
+    // PUT /api/posts (multipart/form-data, same fields as POST) - may also switch between image and text
     [HttpPut]
-    public async Task<IActionResult> Update(IFormFile file)
+    public async Task<IActionResult> Update([FromForm] IFormFile? file, [FromForm] string? text)
     {
-        if (ValidateFile(file) is { } error)
+        if (ValidateContent(file, text) is { } error)
         {
             return BadRequest(error);
         }
@@ -108,9 +110,9 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return NotFound("No post found for today.");
         }
 
-        await ReplaceImageAsync(post, file);
+        await ReplaceContentAsync(post, file, text);
 
-        return Ok(new PostResponse(post.Id, post.CreatedAt, post.ImagePath));
+        return Ok(ToResponse(post));
     }
 
     // DELETE /api/posts
@@ -151,9 +153,9 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
             return NotFound("Post not found.");
         }
 
-        await ReplaceImageAsync(post, file);
+        await ReplaceContentAsync(post, file, null);
 
-        return Ok(new PostResponse(post.Id, post.CreatedAt, post.ImagePath));
+        return Ok(ToResponse(post));
     }
 
     // DELETE /api/posts/{id}
@@ -209,6 +211,31 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         return DateTime.SpecifyKind(localDate, DateTimeKind.Utc);
     }
 
+    private static PostResponse ToResponse(Post post) => new(post.Id, post.CreatedAt, post.ImagePath, post.Text);
+
+    // A post is either an image or a text - never both, never nothing.
+    private static string? ValidateContent(IFormFile? file, string? text)
+    {
+        var hasText = !string.IsNullOrWhiteSpace(text);
+
+        if (file is not null && hasText)
+        {
+            return "Post either an image or a text, not both.";
+        }
+
+        if (file is null)
+        {
+            if (!hasText)
+            {
+                return "Add a photo, a GIF or a text.";
+            }
+
+            return text!.Trim().Length > MaxTextLength ? $"The text is too long (max. {MaxTextLength} characters)." : null;
+        }
+
+        return ValidateFile(file);
+    }
+
     private static string? ValidateFile(IFormFile file)
     {
         if (file.Length == 0)
@@ -229,13 +256,14 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         return null;
     }
 
-    // Saves the new image first and only then removes the old one, so a failed
+    // Saves the new content first and only then removes the old image, so a failed
     // upload never leaves the post pointing at a deleted file.
-    private async Task ReplaceImageAsync(Post post, IFormFile file)
+    private async Task ReplaceContentAsync(Post post, IFormFile? file, string? text)
     {
         var oldImagePath = post.ImagePath;
 
-        post.ImagePath = await SaveImageAsync(file);
+        post.ImagePath = file is null ? null : await SaveImageAsync(file);
+        post.Text = file is null ? text!.Trim() : null;
         await db.SaveChangesAsync();
 
         DeleteImageFile(oldImagePath);
@@ -256,8 +284,13 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         return $"/uploads/{fileName}";
     }
 
-    private void DeleteImageFile(string imagePath)
+    private void DeleteImageFile(string? imagePath)
     {
+        if (imagePath is null)
+        {
+            return;
+        }
+
         var fullPath = Path.Combine(UploadsFolder, Path.GetFileName(imagePath));
 
         if (System.IO.File.Exists(fullPath))

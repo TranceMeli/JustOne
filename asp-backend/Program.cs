@@ -103,8 +103,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed the roles and the three test users so you can log in right away.
+// Demo mode (Development only): dotnet run -- --DemoData:Enabled=true --ConnectionStrings:DefaultConnection="Data Source=demo.db"
+// creates its own database on first start and fills it with sample users, photos and comments.
+var demoData = app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("DemoData:Enabled");
+if (demoData)
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
+
+// Seed the roles and the admin account so you can log in right away.
 await DbSeeder.SeedAsync(app.Services);
+
+if (demoData)
+{
+    await DemoDataSeeder.SeedAsync(app.Services);
+}
 
 if (app.Environment.IsDevelopment())
 {

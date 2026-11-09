@@ -144,10 +144,11 @@ watch(() => props.postId, fetchComments, { immediate: true })
 
     <ul v-else ref="list" class="comment-list">
       <li v-for="comment in comments" :key="comment.id" class="comment">
-        <span class="avatar" aria-hidden="true">{{ comment.authorEmail.charAt(0).toUpperCase() }}</span>
+        <span class="avatar" aria-hidden="true">{{ comment.authorName.charAt(0).toUpperCase() }}</span>
         <div>
           <div class="who">
-            <strong>{{ comment.authorEmail }}</strong>
+            <strong>{{ comment.authorName }}</strong>
+            <span v-if="comment.isOwn" class="you">You</span>
             <time class="meta" :datetime="comment.createdAt">{{ formatDate(comment.createdAt) }}</time>
           </div>
           <p class="message">{{ comment.message }}</p>
@@ -304,6 +305,15 @@ h3 svg {
 .who strong {
   font-weight: 600;
   overflow-wrap: anywhere;
+}
+
+.you {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
 }
 
 .message {

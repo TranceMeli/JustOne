@@ -66,7 +66,7 @@ onMounted(fetchEntries)
   <section class="card" aria-labelledby="guestbook-title">
     <div class="card-head">
       <h2 id="guestbook-title">Guestbook</h2>
-      <span class="meta private">Only visible to you</span>
+      <span class="meta private">Visible to everyone</span>
     </div>
 
     <div class="card-body">
@@ -77,9 +77,11 @@ onMounted(fetchEntries)
           v-model="newMessage"
           class="input"
           :maxlength="MAX_LENGTH"
-          placeholder="Write something…"
+          placeholder="Say hi to the community…"
+          aria-describedby="guestbook-help"
           rows="3"
         />
+        <span id="guestbook-help" class="field-help">Everyone who uses JustOne can read the guestbook.</span>
         <div class="form-row">
           <span class="field-help">{{ newMessage.length }} / {{ MAX_LENGTH }}</span>
           <button type="submit" class="btn btn-secondary" :disabled="!canPost">
@@ -98,13 +100,20 @@ onMounted(fetchEntries)
       </div>
 
       <p v-else-if="entries.length === 0 && !errorMessage" class="empty">
-        No entries yet – write down a thought, a plan or just how your day was.
+        No entries yet – be the first to say hello.
       </p>
 
       <ul v-else class="entries">
-        <li v-for="entry in entries" :key="entry.id" class="entry">
-          <p>{{ entry.message }}</p>
-          <time class="meta" :datetime="entry.createdAt">{{ formatDate(entry.createdAt) }}</time>
+        <li v-for="entry in entries" :key="entry.id" class="entry" :class="{ own: entry.isOwn }">
+          <span class="avatar" aria-hidden="true">{{ entry.authorName.charAt(0).toUpperCase() }}</span>
+          <div>
+            <div class="who">
+              <strong>{{ entry.authorName }}</strong>
+              <span v-if="entry.isOwn" class="you">You</span>
+              <time class="meta" :datetime="entry.createdAt">{{ formatDate(entry.createdAt) }}</time>
+            </div>
+            <p>{{ entry.message }}</p>
+          </div>
         </li>
       </ul>
     </div>
@@ -137,14 +146,43 @@ onMounted(fetchEntries)
 }
 
 .entry {
-  padding: var(--space-3) var(--space-4);
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  padding: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
 
+.entry.own {
+  border-color: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.who strong {
+  font-weight: 600;
+}
+
+.you {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
 .entry p {
-  margin: 0;
+  margin: 2px 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

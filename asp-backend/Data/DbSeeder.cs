@@ -5,6 +5,13 @@ namespace JustOne.Data
 {
     public static class DbSeeder
     {
+        // Admin for moderation, plus a regular user for the "Try the demo account" button.
+        private static readonly (string Email, string Password, string FirstName, string LastName, string Role)[] Accounts =
+        [
+            ("admin@justone.com", "Admin123!", "JustOne Team", "", Roles.Admin),
+            ("anna@justone.com", "Demo123!", "Anna", "Berg", Roles.User)
+        ];
+
         public static async Task SeedAsync(IServiceProvider services)
         {
             using var scope = services.CreateScope();
@@ -19,22 +26,25 @@ namespace JustOne.Data
                 }
             }
 
-            const string adminEmail = "admin@justone.com";
-            if (await userManager.FindByEmailAsync(adminEmail) is null)
+            foreach (var (email, password, firstName, lastName, role) in Accounts)
             {
-                var admin = new ApplicationUser
+                if (await userManager.FindByEmailAsync(email) is not null)
                 {
-                    FirstName = "Default",
-                    LastName = "Admin",
-                    UserName = adminEmail,
-                    Email = adminEmail,
+                    continue;
+                }
+
+                var user = new ApplicationUser
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    UserName = email,
+                    Email = email,
                     EmailConfirmed = true
                 };
 
-                await userManager.CreateAsync(admin, "Admin123!");
-                await userManager.AddToRoleAsync(admin, Roles.Admin);
+                await userManager.CreateAsync(user, password);
+                await userManager.AddToRoleAsync(user, role);
             }
         }
-
     }
 }

@@ -28,8 +28,11 @@ const progress = computed(() => (props.elapsedCount ? Math.round((props.postedCo
 
 function dayLabel(d) {
   const date = `${d.day} ${monthName.value}`
-  if (d.status === 'posted') return `${d.isToday ? 'Your photo for today, ' : 'Photo from '}${date}`
-  if (d.status === 'today') return `Today, ${date} – add a photo`
+  if (d.status === 'posted') {
+    const what = d.kind === 'text' ? 'text' : 'photo'
+    return d.isToday ? `Your ${what} for today, ${date}` : `${what === 'text' ? 'Text' : 'Photo'} from ${date}`
+  }
+  if (d.status === 'today') return `Today, ${date} – add a post`
   if (d.status === 'missed') return `${date} – missed`
   return date
 }
@@ -95,15 +98,19 @@ function onDayClick(d) {
               v-if="d.status === 'posted' || d.status === 'today'"
               type="button"
               class="day"
-              :class="d.status"
+              :class="[d.status, d.kind]"
               :aria-label="dayLabel(d)"
               @click="onDayClick(d)"
             >
-              <img v-if="d.status === 'posted'" :src="d.imageUrl" alt="" loading="lazy" />
+              <img v-if="d.kind === 'image'" :src="d.imageUrl" alt="" loading="lazy" />
+              <span v-else-if="d.kind === 'text'" class="excerpt" aria-hidden="true">
+                <AppIcon name="quote" />
+                <span>{{ d.text }}</span>
+              </span>
               <span class="num">{{ d.day }}</span>
               <span v-if="d.status === 'today'" class="add">
                 <AppIcon name="plus" />
-                <span>Add photo</span>
+                <span>Add post</span>
               </span>
             </button>
             <div v-else class="day" :class="d.status" :aria-label="dayLabel(d)" role="img">
@@ -117,7 +124,8 @@ function onDayClick(d) {
         </ol>
 
         <ul class="legend">
-          <li><i class="l-posted" />Posted</li>
+          <li><i class="l-posted" />Photo / GIF</li>
+          <li><i class="l-text" />Text</li>
           <li><i class="l-missed" />Missed</li>
           <li><i class="l-today" />Today</li>
           <li><i class="l-future" />Upcoming</li>
@@ -260,6 +268,42 @@ button.day:hover {
   object-fit: cover;
 }
 
+/* Text posts: the first words on a soft indigo card */
+.day.posted.text {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.excerpt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 28px 8px 8px;
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.excerpt svg {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  color: var(--accent-text);
+}
+
+.excerpt span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .day.posted .num {
   margin: 6px 8px;
   padding: 0 6px;
@@ -344,6 +388,11 @@ button.day:hover {
   border-color: transparent !important;
 }
 
+.l-text {
+  background: var(--accent-soft);
+  border-color: var(--accent-text) !important;
+}
+
 .l-missed {
   background: var(--missed-bg);
   border-color: var(--missed) !important;
@@ -358,6 +407,19 @@ button.day:hover {
 }
 
 @media (max-width: 600px) {
+  /* Too small for words - the quote icon alone marks a text day. */
+  .excerpt span {
+    display: none;
+  }
+
+  .excerpt svg {
+    top: auto;
+    bottom: 4px;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+  }
+
   .card-head,
   .card-body {
     padding-left: var(--space-4);

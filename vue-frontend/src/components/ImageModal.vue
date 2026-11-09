@@ -74,7 +74,15 @@ watch(
 )
 
 // Don't stay stuck in zoom mode when switching to a different photo.
-watch(() => props.entry?.postId, () => (isZoomed.value = false))
+watch(
+  () => props.entry?.postId,
+  () => {
+    isZoomed.value = false
+    // Text posts sit next to the comments, like a portrait photo.
+    if (props.entry?.kind === 'text') orientation.value = 'portrait'
+  },
+  { immediate: true }
+)
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
@@ -91,7 +99,7 @@ onBeforeUnmount(() => {
             type="button"
             class="btn btn-ghost btn-icon"
             :disabled="!prevEntry"
-            aria-label="Previous photo"
+            aria-label="Previous post"
             @click="emit('navigate', prevEntry)"
           >
             <AppIcon name="prev" />
@@ -101,7 +109,7 @@ onBeforeUnmount(() => {
             type="button"
             class="btn btn-ghost btn-icon"
             :disabled="!nextEntry"
-            aria-label="Next photo"
+            aria-label="Next post"
             @click="emit('navigate', nextEntry)"
           >
             <AppIcon name="next" />
@@ -112,11 +120,16 @@ onBeforeUnmount(() => {
           </button>
         </header>
 
-        <div class="photo-area">
+        <div v-if="entry.kind === 'image'" class="photo-area">
           <button type="button" class="photo-button" aria-label="Show photo at full size" @click="isZoomed = true">
             <img :src="entry.imageUrl" :alt="`Photo from ${title}`" @load="onImageLoad" />
           </button>
           <span class="zoom-hint" aria-hidden="true">Click to enlarge</span>
+        </div>
+
+        <div v-else class="text-area">
+          <AppIcon name="quote" />
+          <blockquote>{{ entry.text }}</blockquote>
         </div>
 
         <Comments :post-id="entry.postId" />
@@ -124,7 +137,7 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Second layer: full-size photo -->
-    <div v-if="entry && isZoomed" class="zoom-backdrop" role="button" aria-label="Close full size view" @click="isZoomed = false">
+    <div v-if="entry?.kind === 'image' && isZoomed" class="zoom-backdrop" role="button" aria-label="Close full size view" @click="isZoomed = false">
       <img :src="entry.imageUrl" :alt="`Photo from ${title} at full size`" class="zoom-image" />
     </div>
   </Teleport>
@@ -217,6 +230,37 @@ onBeforeUnmount(() => {
 
 .modal.landscape .photo-button img {
   max-height: min(48vh, 460px);
+}
+
+.text-area {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-5);
+  overflow-y: auto;
+  background: var(--accent-soft);
+}
+
+.text-area > svg {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  width: 32px;
+  height: 32px;
+  color: var(--accent-text);
+  opacity: 0.6;
+}
+
+.text-area blockquote {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--text);
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .zoom-hint {
