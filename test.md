@@ -30,6 +30,26 @@ npm run test:watch  # re-run on every change
 
 Components are mounted in jsdom. The Axios client is replaced by mocks, so the tests decide exactly what "the server" answers – including errors and conflicts.
 
+### End-to-end (Playwright)
+
+```bash
+cd vue-frontend
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+Playwright starts the real backend in demo mode with its own throwaway database (`asp-backend/e2e.db`, deleted before every run) and the Vite dev server on port 5175, then drives Chromium. Port 5250 must be free – stop a running backend first. [`e2e/app.spec.js`](vue-frontend/e2e/app.spec.js) covers 4 scenarios: wrong password, demo login, the full journey (register → text post → open it from the calendar → comment → guestbook entry → log out → log back in, post still there) and deleting today's post after confirming.
+
+To refresh the step screenshots in [`docs/tests/e2e`](docs/tests/e2e), run the same tests with `E2E_SCREENSHOTS=1` (a normal run doesn't write any images):
+
+```bash
+E2E_SCREENSHOTS=1 npm run test:e2e        # Git Bash / macOS / Linux
+```
+
+```powershell
+$env:E2E_SCREENSHOTS=1; npm run test:e2e; Remove-Item Env:E2E_SCREENSHOTS   # PowerShell
+```
+
 ## What is tested
 
 ### Backend
@@ -118,9 +138,29 @@ Components are mounted in jsdom. The Axios client is replaced by mocks, so the t
 
 ![Frontend test run: 57 passed](docs/tests/frontend-tests.png)
 
+### End-to-end – 4 passed
+
+![End-to-end test run with Playwright: 4 passed](docs/tests/e2e-tests.png)
+
+#### What the browser saw
+
+Taken by the end-to-end tests themselves, right after the assertions of each step passed.
+
+| 1 · Wrong password | 2 · Demo account | 3 · Writing a text post |
+| --- | --- | --- |
+| ![Login with an error message after a wrong password](docs/tests/e2e/01-wrong-password.png) | ![Demo account: the month with seeded photos, texts and the guestbook](docs/tests/e2e/02-demo-month.png) | ![New account writes a three-line text in the today card](docs/tests/e2e/03-writing-a-text-post.png) |
+
+| 4 · Posted for today | 5 · Comment on the post | 6 · Guestbook entry |
+| --- | --- | --- |
+| ![Today card shows the post, calendar tile for today, toast "Posted for today"](docs/tests/e2e/04-posted-for-today.png) | ![Post opened from the calendar with the new comment marked "You"](docs/tests/e2e/05-comment-on-the-post.png) | ![New guestbook entry on top, author shown as "Erika T."](docs/tests/e2e/06-guestbook-entry.png) |
+
+| 7 · Logged out | 8 · Confirm delete | 9 · Post deleted |
+| --- | --- | --- |
+| ![After logging out the login form is shown, not the register form](docs/tests/e2e/07-logged-out.png) | ![Dialog "Delete today's post?" with Cancel and Delete post](docs/tests/e2e/08-confirm-delete.png) | ![Today is free again with "Add post", toast confirms the deletion](docs/tests/e2e/09-deleted.png) |
+
 ## Not covered yet
 
-- **End-to-end tests** in a real browser (e.g. Playwright) that click through login → post → comment against a running backend. The screenshots in the README are made that way, but without assertions.
+- Image uploads in the end-to-end tests (they only use text posts).
 - The `Register` component and the moderation endpoint that **replaces** another user's image (`PUT /api/posts/{id}`).
 - Automated accessibility checks (e.g. axe) – contrast and labels are covered by the design tokens and the component tests above, but not scanned.
 - Code coverage reports (`dotnet test --collect:"XPlat Code Coverage"` and `@vitest/coverage-v8` would add them).
