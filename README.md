@@ -87,6 +87,8 @@ Typography: one system font stack (Segoe UI, SF Pro, Roboto …), sizes in `rem`
 
 **Frontend:** Vue 3 (Composition API), Vite, Pinia, Axios
 
+**Tests:** xUnit with `WebApplicationFactory` and in-memory SQLite (backend), Vitest with Vue Test Utils and jsdom (frontend)
+
 ## Project Structure
 
 ```
@@ -99,15 +101,26 @@ JustOne/
 │   ├── Migrations/            # EF Core migrations
 │   ├── SeedData/              # Generated demo photos and GIFs (demo mode)
 │   └── Auth/                  # JWT settings, TokenService
-├── docs/                      # Screenshots for this README, design mockups
+├── docs/                      # Screenshots for this README, test runs, design mockups
+├── tests/JustOne.Tests/       # Backend tests (xUnit, see test.md)
 └── vue-frontend/              # Vue 3 frontend
-    └── src/
-        ├── components/        # AppHeader, AppFooter, PostCalendar, TodayCard, ImageModal,
-        │                      # Comments, Guestbook, Login, Register, ConfirmDialog, ToastHost
-        ├── assets/            # theme.css (design tokens: colors, type, spacing; light + dark)
-        ├── composables/       # usePostCalendar, useTheme, useToast
-        ├── stores/            # auth (Pinia)
-        └── api/               # Axios client with auth interceptor
+    ├── src/
+    │   ├── components/        # AppHeader, AppFooter, PostCalendar, TodayCard, ImageModal,
+    │   │                      # Comments, Guestbook, Login, Register, ConfirmDialog, ToastHost
+    │   ├── assets/            # theme.css (design tokens: colors, type, spacing; light + dark)
+    │   ├── composables/       # usePostCalendar, useTheme, useToast
+    │   ├── stores/            # auth (Pinia)
+    │   └── api/               # Axios client with auth interceptor
+    └── tests/                 # Frontend tests (Vitest, see test.md)
+```
+
+## Tests
+
+**103 automated tests** – 46 for the backend (xUnit, the real API against an in-memory database) and 57 for the frontend (Vitest + Vue Test Utils). What they cover, how to run them and the latest results are in [**test.md**](test.md).
+
+```bash
+cd tests/JustOne.Tests && dotnet test     # backend
+cd vue-frontend && npm test               # frontend
 ```
 
 ## Setup
