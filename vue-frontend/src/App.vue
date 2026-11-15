@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { usePostCalendar } from './composables/usePostCalendar'
 import AppHeader from './components/AppHeader.vue'
@@ -14,6 +14,15 @@ import ToastHost from './components/ToastHost.vue'
 
 const authStore = useAuthStore()
 const showRegister = ref(false)
+
+// After logging out (or a session expiring) always show the login form,
+// even if the account was created via the register form in this tab.
+watch(
+  () => authStore.isLoggedIn,
+  (loggedIn) => {
+    if (!loggedIn) showRegister.value = false
+  }
+)
 const selectedDay = ref(null)
 const todayCard = ref(null)
 

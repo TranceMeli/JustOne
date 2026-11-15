@@ -41,7 +41,7 @@ async function submitEntry() {
     const response = await apiClient.post('/guestbook', { message: newMessage.value.trim() })
     entries.value.unshift(response.data)
     newMessage.value = ''
-    showToast('Entry added to your guestbook.')
+    showToast('Entry added to the guestbook.')
   } catch {
     errorMessage.value = 'Your entry could not be saved. Your text is still here – please try again.'
   } finally {
