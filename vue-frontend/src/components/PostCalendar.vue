@@ -102,7 +102,9 @@ function onDayClick(d) {
               :aria-label="dayLabel(d)"
               @click="onDayClick(d)"
             >
-              <img v-if="d.kind === 'image'" :src="d.imageUrl" alt="" loading="lazy" />
+              <span v-if="d.kind === 'image'" class="thumb" aria-hidden="true">
+                <AppIcon name="image" />
+              </span>
               <span v-else-if="d.kind === 'text'" class="excerpt" aria-hidden="true">
                 <AppIcon name="quote" />
                 <span>{{ d.text }}</span>
@@ -260,12 +262,18 @@ button.day:hover {
   border-color: transparent;
 }
 
-.day.posted img {
+/* Photo / GIF days: a gradient tile with an image icon (the real photo opens on click) */
+.thumb {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--indigo-300), var(--pink-300));
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.thumb .icon {
+  font-size: 32px;
 }
 
 /* Text posts: the first words on a soft indigo card */
@@ -408,6 +416,15 @@ button.day:hover {
   /* Too small for words - the quote icon alone marks a text day. */
   .excerpt span {
     display: none;
+  }
+
+  .thumb {
+    place-items: end end;
+    padding: 4px;
+  }
+
+  .thumb .icon {
+    font-size: 18px;
   }
 
   .excerpt .icon {
