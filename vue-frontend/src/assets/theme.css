@@ -109,6 +109,43 @@
 }
 
 /* =====================================================================
+   Icons: Material Symbols Outlined (Google, Apache License 2.0), subset with only the
+   icons used in AppIcon.vue. The icon name is written via ::before so that the text
+   never shows up in copy/paste, search or tests.
+   ===================================================================== */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('./fonts/material-symbols-outlined.woff2') format('woff2');
+}
+
+.icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  font-family: 'Material Symbols Outlined';
+  font-size: 20px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+
+.icon::before {
+  content: attr(data-icon);
+}
+
+/* =====================================================================
    Base
    ===================================================================== */
 *,
@@ -201,10 +238,9 @@ a {
   transition: background-color var(--motion), border-color var(--motion), color var(--motion);
 }
 
-.btn svg {
-  width: 18px;
-  height: 18px;
+.btn .icon {
   flex: none;
+  font-size: 18px;
 }
 
 .btn-primary {
@@ -349,11 +385,10 @@ textarea.input {
   font-size: var(--text-sm);
 }
 
-.alert svg {
-  width: 18px;
-  height: 18px;
+.alert .icon {
   flex: none;
   margin-top: 2px;
+  font-size: 18px;
 }
 
 .alert strong {

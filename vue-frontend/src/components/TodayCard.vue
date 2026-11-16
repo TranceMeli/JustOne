@@ -349,9 +349,8 @@ h2 {
   font-weight: 600;
 }
 
-.badge svg {
-  width: 16px;
-  height: 16px;
+.badge .icon {
+  font-size: 16px;
 }
 
 /* Two-way switch: photo/GIF or text */
@@ -380,9 +379,8 @@ h2 {
   cursor: pointer;
 }
 
-.segmented button svg {
-  width: 16px;
-  height: 16px;
+.segmented button .icon {
+  font-size: 16px;
 }
 
 .segmented button.active {
@@ -446,10 +444,9 @@ h2 {
   background: var(--accent-soft);
 }
 
-.drop > svg {
-  width: 32px;
-  height: 32px;
+.drop > .icon {
   color: var(--accent-text);
+  font-size: 32px;
 }
 
 .drop strong {

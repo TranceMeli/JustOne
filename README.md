@@ -81,6 +81,12 @@ All colors are defined once as fixed scales (50–900) in [`theme.css`](vue-fron
 
 Typography: one system font stack (Segoe UI, SF Pro, Roboto …), sizes in `rem` from 12 to 32 px, body text 16 px with line height 1.5.
 
+### Icons
+
+All icons are [Material Symbols](https://fonts.google.com/icons) (Outlined, Apache License 2.0) by Google. To keep the app fast and independent of external servers, the font is **self-hosted as a 3 KB subset** with only the icons in use ([`assets/fonts`](vue-frontend/src/assets/fonts/material-symbols-outlined.woff2)). [`AppIcon.vue`](vue-frontend/src/components/AppIcon.vue) maps the app's icon names to Material names.
+
+To add an icon, add it to the map in `AppIcon.vue` and download a new subset (names sorted alphabetically, comma-separated) from the Google Fonts CSS API, e.g. `https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add,check,close` – open the `src: url(...)` it returns and save the `woff2` file over the existing one.
+
 ## Tech Stack
 
 **Backend:** ASP.NET Core 10 (controller-based Web API), Entity Framework Core with SQLite, ASP.NET Core Identity, JWT bearer auth with refresh token rotation, Swagger/Swashbuckle

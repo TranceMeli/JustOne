@@ -42,11 +42,10 @@ const { toasts, dismiss } = useToast()
   font-size: var(--text-sm);
 }
 
-.toast > svg {
-  width: 18px;
-  height: 18px;
+.toast > .icon {
   flex: none;
   color: var(--indigo-300);
+  font-size: 18px;
 }
 
 .toast span {

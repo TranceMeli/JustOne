@@ -229,10 +229,9 @@ h3 {
   font-size: var(--text-md);
 }
 
-h3 svg {
-  width: 18px;
-  height: 18px;
+h3 .icon {
   color: var(--accent-text);
+  font-size: 18px;
 }
 
 .count {
@@ -268,10 +267,9 @@ h3 svg {
   color: var(--text-secondary);
 }
 
-.empty svg {
-  width: 32px;
-  height: 32px;
+.empty .icon {
   color: var(--accent-text);
+  font-size: 32px;
 }
 
 .empty strong {

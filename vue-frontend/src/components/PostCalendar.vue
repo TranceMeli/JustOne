@@ -288,13 +288,12 @@ button.day:hover {
   line-height: 1.35;
 }
 
-.excerpt svg {
+.excerpt .icon {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 16px;
-  height: 16px;
   color: var(--accent-text);
+  font-size: 16px;
 }
 
 .excerpt span {
@@ -330,10 +329,9 @@ button.day:hover {
   font-size: var(--text-xs);
 }
 
-.status svg,
-.add svg {
-  width: 14px;
-  height: 14px;
+.status .icon,
+.add .icon {
+  font-size: 14px;
 }
 
 .day.today {
@@ -412,12 +410,11 @@ button.day:hover {
     display: none;
   }
 
-  .excerpt svg {
+  .excerpt .icon {
     top: auto;
     bottom: 4px;
     right: 4px;
-    width: 14px;
-    height: 14px;
+    font-size: 14px;
   }
 
   .card-head,

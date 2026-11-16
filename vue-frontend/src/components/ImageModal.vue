@@ -242,14 +242,13 @@ onBeforeUnmount(() => {
   background: var(--accent-soft);
 }
 
-.text-area > svg {
+.text-area > .icon {
   position: absolute;
   top: var(--space-4);
   left: var(--space-4);
-  width: 32px;
-  height: 32px;
   color: var(--accent-text);
   opacity: 0.6;
+  font-size: 32px;
 }
 
 .text-area blockquote {
