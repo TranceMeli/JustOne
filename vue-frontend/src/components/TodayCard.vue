@@ -230,7 +230,6 @@ onBeforeUnmount(clearFile)
           </button>
         </div>
 
-        <!-- Photo / GIF -->
         <template v-if="mode === 'image'">
           <img v-if="previewUrl" :src="previewUrl" alt="Preview of the selected file" class="photo" />
           <div
@@ -249,7 +248,6 @@ onBeforeUnmount(clearFile)
           </div>
         </template>
 
-        <!-- Text -->
         <div v-else class="field">
           <label for="today-text">Your words for today</label>
           <textarea

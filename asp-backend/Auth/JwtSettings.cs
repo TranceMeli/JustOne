@@ -6,7 +6,7 @@
         public string Key { get; set; } = string.Empty;
         public string Issuer {  get; set; } = string.Empty;
         public string Audience {  get; set; } = string.Empty;
-        // access tokens short-lived, refresh longer
+        // The access token is short-lived; the refresh token lives longer so users stay logged in.
         public int ExpiryMinutes { get; set; }
         public int RefreshTokenDays { get; set; }
     }

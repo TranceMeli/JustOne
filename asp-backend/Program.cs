@@ -11,7 +11,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Read the "JwtSettings" section into a strongly-typed object.
+// Bound twice: injected via IOptions elsewhere, and read here to configure token validation.
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
 
@@ -22,7 +22,7 @@ builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options => options.User.RequireUniqueEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
 
-// 3. Authenticate requests using JWT bearer tokens.
+// Authenticate requests using JWT bearer tokens.
 builder.Services
     .AddAuthentication(options =>
     {
@@ -50,16 +50,14 @@ builder.Services
         };
     });
 
-// 4. Authorization. The "ManagerOnly" named policy is reused by any endpoint that needs it.
+// Policy for Manager-only endpoints. Not used yet: the moderation endpoints check their roles directly.
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("ManagerOnly", policy => policy.RequireRole(Roles.Manager));
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-// Controllers instead of minimal API endpoints.
 builder.Services.AddControllers();
 
-// Swagger/Swashbuckle.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -112,7 +110,6 @@ if (demoData)
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
 }
 
-// Seed the roles and the admin account so you can log in right away.
 await DbSeeder.SeedAsync(app.Services);
 
 if (demoData)

@@ -92,8 +92,8 @@ public class AuthController(
 
         if (!existing.IsActive)
         {
-            // War der Token schon widerrufen und taucht erneut auf: vermutlich gestohlen -
-            // vorsichtshalber ALLE aktiven Tokens dieses Users invalidieren.
+            // A revoked token that shows up again was probably stolen:
+            // as a precaution, revoke ALL active tokens of this user.
             if (existing.Revoked is not null)
             {
                 await RevokeAllActiveTokensAsync(existing.UserId);

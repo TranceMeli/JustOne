@@ -115,7 +115,6 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         return Ok(ToResponse(post));
     }
 
-    // DELETE /api/posts
     [HttpDelete]
     public async Task<IActionResult> Delete()
     {
@@ -158,7 +157,6 @@ public class PostsController(AppDbContext db, IWebHostEnvironment env) : Control
         return Ok(ToResponse(post));
     }
 
-    // DELETE /api/posts/{id}
     // Moderation: Admin/Manager can delete ANY post, not just their own.
     [HttpDelete("{id:int}")]
     [Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]

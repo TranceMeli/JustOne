@@ -1,5 +1,9 @@
 # JustOne
 
+A social network with one simple rule: **one post per day, nothing more** – a photo, a GIF or a few words. No endless feed, no pressure to post constantly, just a daily moment collected in a monthly overview.
+
+**Status:** actively in development – a portfolio project built for software developer job applications.
+
 ![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-5C2D91?style=for-the-badge&logo=dotnet&logoColor=white)
@@ -11,8 +15,6 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Pinia](https://img.shields.io/badge/Pinia-FFD859?style=for-the-badge&logo=vue.js&logoColor=black)
 ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
-
-A social network with one simple rule: **one post per day, nothing more** – a photo, a GIF or a few words. No endless feed, no pressure to post constantly, just a daily moment collected in a monthly overview.
 
 ## Screenshots
 
@@ -65,6 +67,75 @@ Every user sees their month as a grid of boxes, one per day. A day's post is eit
 - **Dark mode**: follows the system, switchable (system / light / dark) in the header
 - **Accessible**: WCAG AA contrast for all text, keyboard-operable calendar and dialogs, visible focus, labelled form fields, `prefers-reduced-motion` respected
 - **Responsive design**: two columns on desktop, one column on phones with today's task first
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) and the EF Core CLI: `dotnet tool install --global dotnet-ef`
+- [Node.js](https://nodejs.org/) 22.18+ or 24.12+
+
+## Quick start
+
+```bash
+git clone https://github.com/TranceMeli/JustOne.git
+cd JustOne
+```
+
+Start the backend (first terminal):
+
+```bash
+cd asp-backend
+dotnet restore
+dotnet ef database update
+dotnet run
+```
+
+The API runs at `http://localhost:5250` (the address the frontend expects), Swagger UI at `http://localhost:5250/swagger`.
+
+Start the frontend (second terminal):
+
+```bash
+cd vue-frontend
+npm install
+npm run dev
+```
+
+The app runs at `http://localhost:5173`. Log in with the demo account below, or create your own account.
+
+## Usage
+
+On first start the roles and two accounts are seeded:
+
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@justone.com` | `Admin123!` | Admin (moderation) |
+| `anna@justone.com` | `Demo123!` | User – used by the "Try the demo account" button |
+
+These are demo credentials for local development only – change or remove them before running JustOne anywhere public.
+
+### Demo data (optional)
+
+To see the app with content – like in the screenshots – start the backend in demo mode. It uses its own database (`demo.db`), so your normal data stays untouched:
+
+```bash
+cd asp-backend
+dotnet run -- --DemoData:Enabled=true --ConnectionStrings:DefaultConnection="Data Source=demo.db"
+```
+
+On the first start this creates three friends for Anna (`lena@`, `max@`, `sara@justone.com`, password `Demo123!`) and fills the previous and the current month for all four with photos, GIFs and short texts (only 2–3 missed days per user, today stays open), plus comments and guestbook entries. Photos and GIFs are generated illustrations from [`asp-backend/SeedData`](asp-backend/SeedData) – no third-party images. Delete `demo.db` to start over. Demo mode only works in the Development environment.
+
+## Configuration
+
+Settings live in [`asp-backend/appsettings.json`](asp-backend/appsettings.json). Like any ASP.NET Core setting they can be overridden on the command line (`--JwtSettings:Key=...`) or with environment variables (`JwtSettings__Key=...`).
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `JwtSettings:Key` | Secret used to sign tokens. **Replace it with a long random value** for anything beyond local development and keep it out of the repository | demo key from `appsettings.json` |
+| `JwtSettings:Issuer` | Token issuer | `TranceMeli` |
+| `JwtSettings:Audience` | Token audience | `JustOne-api` |
+| `JwtSettings:ExpiryMinutes` | Lifetime of an access token | `60` |
+| `JwtSettings:RefreshTokenDays` | Lifetime of a refresh token | `7` |
+| `ConnectionStrings:DefaultConnection` | SQLite database file | `Data Source=justone.db` |
+| `DemoData:Enabled` | Fill the database with demo content (Development environment only) | `false` |
 
 ## Design
 
@@ -122,59 +193,22 @@ JustOne/
 
 ## Tests
 
-**103 automated tests** – 46 for the backend (xUnit, the real API against an in-memory database) and 57 for the frontend (Vitest + Vue Test Utils). What they cover, how to run them and the latest results are in [**test.md**](test.md).
+**103 automated tests** – 46 for the backend (xUnit, the real API against an in-memory database) and 57 for the frontend (Vitest + Vue Test Utils) – plus 4 end-to-end tests with Playwright. What they cover and the latest results are in [**test.md**](test.md).
 
 ```bash
 cd tests/JustOne.Tests && dotnet test     # backend
 cd vue-frontend && npm test               # frontend
+cd vue-frontend && npm run test:e2e       # end-to-end (real browser and backend, port 5250 must be free)
 ```
 
-## Setup
+## Contributing
 
-### Prerequisites
+Contributions and suggestions are welcome: open an issue first for bigger changes, and make sure the tests above pass before you open a pull request.
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) and the EF Core CLI: `dotnet tool install --global dotnet-ef`
-- [Node.js](https://nodejs.org/) 22.18+ or 24.12+
+## Support
 
-### Backend
+Questions and bug reports: [GitHub Issues](https://github.com/TranceMeli/JustOne/issues).
 
-```bash
-cd asp-backend
-dotnet restore
-dotnet ef database update
-dotnet run
-```
+## License
 
-The API runs at `http://localhost:5250` (the address the frontend expects), Swagger UI at `http://localhost:5250/swagger`.
-
-On first start the roles and a demo admin account are seeded:
-
-| Email | Password | Role |
-| --- | --- | --- |
-| `admin@justone.com` | `Admin123!` | Admin (moderation) |
-| `anna@justone.com` | `Demo123!` | User – used by the "Try the demo account" button |
-
-### Demo data (optional)
-
-To see the app with content – like in the screenshots – start the backend in demo mode. It uses its own database (`demo.db`), so your normal data stays untouched:
-
-```bash
-cd asp-backend
-dotnet run -- --DemoData:Enabled=true --ConnectionStrings:DefaultConnection="Data Source=demo.db"
-```
-
-On the first start this creates three friends for Anna (`lena@`, `max@`, `sara@justone.com`, password `Demo123!`) and fills the previous and the current month for all four with photos, GIFs and short texts (only 2–3 missed days per user, today stays open), plus comments and guestbook entries. Photos and GIFs are generated illustrations from [`asp-backend/SeedData`](asp-backend/SeedData) – no third-party images. Delete `demo.db` to start over. Demo mode only works in the Development environment.
-
-### Frontend
-
-```bash
-cd vue-frontend
-npm install
-npm run dev
-```
-
-The app runs at `http://localhost:5173`.
-
-## Status
-
-Actively in development, a portfolio project built for software developer job applications.
+No license has been chosen yet.
