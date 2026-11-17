@@ -211,4 +211,4 @@ Questions and bug reports: [GitHub Issues](https://github.com/TranceMeli/JustOne
 
 ## License
 
-No license has been chosen yet.
+This project is licensed under the [MIT License](LICENSE).
